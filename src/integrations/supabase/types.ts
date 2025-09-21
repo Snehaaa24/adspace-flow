@@ -14,7 +14,221 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      billboards: {
+        Row: {
+          created_at: string
+          daily_impressions: number | null
+          description: string | null
+          height_feet: number
+          id: string
+          image_url: string | null
+          is_available: boolean
+          latitude: number
+          location_address: string
+          longitude: number
+          owner_id: string
+          price_per_day: number
+          title: string
+          traffic_score: Database["public"]["Enums"]["traffic_score"]
+          updated_at: string
+          width_feet: number
+        }
+        Insert: {
+          created_at?: string
+          daily_impressions?: number | null
+          description?: string | null
+          height_feet: number
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          latitude: number
+          location_address: string
+          longitude: number
+          owner_id: string
+          price_per_day: number
+          title: string
+          traffic_score?: Database["public"]["Enums"]["traffic_score"]
+          updated_at?: string
+          width_feet: number
+        }
+        Update: {
+          created_at?: string
+          daily_impressions?: number | null
+          description?: string | null
+          height_feet?: number
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          latitude?: number
+          location_address?: string
+          longitude?: number
+          owner_id?: string
+          price_per_day?: number
+          title?: string
+          traffic_score?: Database["public"]["Enums"]["traffic_score"]
+          updated_at?: string
+          width_feet?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billboards_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookings: {
+        Row: {
+          billboard_id: string
+          campaign_id: string | null
+          campaign_name: string | null
+          created_at: string
+          creative_url: string | null
+          customer_id: string
+          end_date: string
+          id: string
+          notes: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["booking_status"]
+          total_cost: number
+          updated_at: string
+        }
+        Insert: {
+          billboard_id: string
+          campaign_id?: string | null
+          campaign_name?: string | null
+          created_at?: string
+          creative_url?: string | null
+          customer_id: string
+          end_date: string
+          id?: string
+          notes?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_cost: number
+          updated_at?: string
+        }
+        Update: {
+          billboard_id?: string
+          campaign_id?: string | null
+          campaign_name?: string | null
+          created_at?: string
+          creative_url?: string | null
+          customer_id?: string
+          end_date?: string
+          id?: string
+          notes?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_cost?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_billboard_id_fkey"
+            columns: ["billboard_id"]
+            isOneToOne: false
+            referencedRelation: "billboards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          created_at: string
+          customer_id: string
+          description: string | null
+          end_date: string | null
+          id: string
+          name: string
+          start_date: string | null
+          total_budget: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name: string
+          start_date?: string | null
+          total_budget?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          name?: string
+          start_date?: string | null
+          total_budget?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          company_name: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +237,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      booking_status: "pending" | "confirmed" | "cancelled" | "completed"
+      traffic_score: "low" | "medium" | "high" | "premium"
+      user_role: "customer" | "owner"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +366,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      booking_status: ["pending", "confirmed", "cancelled", "completed"],
+      traffic_score: ["low", "medium", "high", "premium"],
+      user_role: ["customer", "owner"],
+    },
   },
 } as const
