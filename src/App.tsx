@@ -8,6 +8,11 @@ import { Layout } from "@/components/Layout";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import MapView from "./pages/MapView";
+import Listings from "./pages/Listings";
+import Campaigns from "./pages/Campaigns";
+import Analytics from "./pages/Analytics";
+import Advertiser from "./pages/Advertiser";
 
 const queryClient = new QueryClient();
 
@@ -21,9 +26,11 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={<Layout><Dashboard /></Layout>} />
-            <Route path="/listings" element={<Layout><div>Listings Page</div></Layout>} />
-            <Route path="/campaigns" element={<Layout><div>Campaigns Page</div></Layout>} />
-            <Route path="/analytics" element={<Layout><div>Analytics Page</div></Layout>} />
+            <Route path="/map" element={<Layout><MapView /></Layout>} />
+            <Route path="/listings" element={<Layout><Listings /></Layout>} />
+            <Route path="/campaigns" element={<Layout><Campaigns /></Layout>} />
+            <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
+            <Route path="/advertiser" element={<Layout><Advertiser /></Layout>} />
             <Route path="/owner/billboards" element={<Layout><div>My Billboards Page</div></Layout>} />
             <Route path="/owner/bookings" element={<Layout><div>Owner Bookings Page</div></Layout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
