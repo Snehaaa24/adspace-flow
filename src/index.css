@@ -8,60 +8,60 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 220 13% 8%;
+    --foreground: 210 40% 95%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 220 13% 10%;
+    --card-foreground: 210 40% 95%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 220 13% 10%;
+    --popover-foreground: 210 40% 95%;
 
-    /* Indigo primary brand */
-    --primary: 231 81% 90%;
+    /* Dark purple primary brand */
+    --primary: 263 70% 45%;
     --primary-foreground: 0 0% 100%;
-    --primary-dark: 231 81% 60%;
+    --primary-dark: 263 70% 35%;
 
-    /* Green accents */
-    --secondary: 142 76% 36%;
+    /* Dark teal accents */
+    --secondary: 180 40% 25%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 220 13% 15%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 142 76% 36%;
+    --accent: 180 40% 25%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 60% 45%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 231 81% 60%;
+    --border: 220 13% 20%;
+    --input: 220 13% 15%;
+    --ring: 263 70% 45%;
 
     --radius: 0.75rem;
 
     /* Success variant */
-    --success: 142 76% 36%;
+    --success: 142 50% 30%;
     --success-foreground: 0 0% 100%;
 
     /* Warning variant */
-    --warning: 38 92% 50%;
+    --warning: 38 80% 40%;
     --warning-foreground: 0 0% 100%;
 
     /* Info variant */
-    --info: 217 91% 60%;
+    --info: 217 70% 50%;
     --info-foreground: 0 0% 100%;
 
     /* Sidebar theme */
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 231 81% 60%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 231 81% 60%;
+    --sidebar-background: 220 13% 6%;
+    --sidebar-foreground: 210 40% 90%;
+    --sidebar-primary: 263 70% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 13% 12%;
+    --sidebar-accent-foreground: 210 40% 90%;
+    --sidebar-border: 220 13% 18%;
+    --sidebar-ring: 263 70% 45%;
   }
 
   .dark {
