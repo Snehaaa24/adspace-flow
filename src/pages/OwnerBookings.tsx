@@ -33,10 +33,13 @@ interface Booking {
 }
 
 export default function OwnerBookings() {
+  console.log('OwnerBookings component rendering');
   const { profile } = useAuth();
   const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+
+  console.log('Profile in OwnerBookings:', profile);
 
   const loadBookings = async () => {
     if (!profile) return;

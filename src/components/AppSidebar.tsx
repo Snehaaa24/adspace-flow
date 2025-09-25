@@ -79,6 +79,7 @@ export function AppSidebar() {
                       to={item.url} 
                       end 
                       className={getNavCls}
+                      onClick={() => console.log('Navigating to:', item.url, 'Title:', item.title)}
                     >
                       <item.icon className="h-4 w-4" />
                       {!collapsed && <span>{item.title}</span>}
