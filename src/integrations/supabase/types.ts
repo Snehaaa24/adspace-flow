@@ -89,6 +89,8 @@ export type Database = {
           customer_id: string
           end_date: string
           id: string
+          noc_requested: boolean | null
+          noc_status: string | null
           notes: string | null
           start_date: string
           status: Database["public"]["Enums"]["booking_status"]
@@ -104,6 +106,8 @@ export type Database = {
           customer_id: string
           end_date: string
           id?: string
+          noc_requested?: boolean | null
+          noc_status?: string | null
           notes?: string | null
           start_date: string
           status?: Database["public"]["Enums"]["booking_status"]
@@ -119,6 +123,8 @@ export type Database = {
           customer_id?: string
           end_date?: string
           id?: string
+          noc_requested?: boolean | null
+          noc_status?: string | null
           notes?: string | null
           start_date?: string
           status?: Database["public"]["Enums"]["booking_status"]

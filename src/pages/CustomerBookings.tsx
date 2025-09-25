@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, DollarSign, MapPin, User, FileText, Download } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, User, FileText, Download, Clock } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -23,8 +23,9 @@ interface Booking {
     id: string;
     title: string;
     location_address: string;
+    owner_id: string;
   };
-  customer: {
+  owner?: {
     id: string;
     full_name: string;
     email: string;
@@ -32,7 +33,7 @@ interface Booking {
   };
 }
 
-export default function OwnerBookings() {
+export default function CustomerBookings() {
   const { profile } = useAuth();
   const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -45,10 +46,9 @@ export default function OwnerBookings() {
       .from('bookings')
       .select(`
         *,
-        billboard:billboards(id, title, location_address),
-        customer:profiles!bookings_customer_id_fkey(id, full_name, email, company_name)
+        billboard:billboards(id, title, location_address, owner_id)
       `)
-      .eq('billboard.owner_id', profile.id)
+      .eq('customer_id', profile.id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -68,86 +68,28 @@ export default function OwnerBookings() {
     loadBookings();
   }, [profile]);
 
-  const handleStatusChange = async (bookingId: string, newStatus: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'active') => {
-    const { error } = await supabase
-      .from('bookings')
-      .update({ status: newStatus })
-      .eq('id', bookingId);
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update booking status',
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Success',
-        description: 'Booking status updated',
-      });
-      loadBookings();
-    }
-  };
-
-  const handleNocApproval = async (bookingId: string, approved: boolean) => {
+  const applyForNOC = async (bookingId: string) => {
     const { error } = await supabase
       .from('bookings')
       .update({ 
-        noc_status: approved ? 'approved' : 'rejected' 
+        noc_requested: true,
+        noc_status: 'pending'
       })
       .eq('id', bookingId);
 
     if (error) {
       toast({
         title: 'Error',
-        description: 'Failed to update NOC status',
+        description: 'Failed to request NOC',
         variant: 'destructive',
       });
     } else {
       toast({
         title: 'Success',
-        description: `NOC ${approved ? 'approved' : 'rejected'} successfully`,
+        description: 'NOC request submitted successfully',
       });
       loadBookings();
     }
-  };
-
-  const generateNOC = async (booking: Booking) => {
-    // Generate a simple NOC document
-    const nocContent = `
-NO OBJECTION CERTIFICATE
-
-Date: ${format(new Date(), 'PPP')}
-
-This is to certify that we have no objection to the use of our billboard:
-
-Billboard: ${booking.billboard.title}
-Location: ${booking.billboard.location_address}
-Campaign: ${booking.campaign_name}
-Duration: ${format(new Date(booking.start_date), 'PPP')} to ${format(new Date(booking.end_date), 'PPP')}
-Customer: ${booking.customer.full_name}
-${booking.customer.company_name ? `Company: ${booking.customer.company_name}` : ''}
-
-Approved by: ${profile?.full_name || 'Billboard Owner'}
-
-This certificate is valid for the specified duration only.
-    `;
-
-    // Create and download the NOC
-    const blob = new Blob([nocContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `NOC_${booking.campaign_name}_${booking.id.slice(0, 8)}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    toast({
-      title: 'Success',
-      description: 'NOC generated and downloaded',
-    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -161,6 +103,26 @@ This certificate is valid for the specified duration only.
     return <Badge variant={variants[status as keyof typeof variants]}>{status.toUpperCase()}</Badge>;
   };
 
+  const getNocStatusBadge = (nocStatus: string) => {
+    const variants = {
+      not_requested: 'secondary' as const,
+      pending: 'secondary' as const,
+      approved: 'default' as const,
+      rejected: 'destructive' as const,
+    };
+    const labels = {
+      not_requested: 'NOC Not Requested',
+      pending: 'NOC Pending',
+      approved: 'NOC Approved',
+      rejected: 'NOC Rejected',
+    };
+    return (
+      <Badge variant={variants[nocStatus as keyof typeof variants]}>
+        {labels[nocStatus as keyof typeof labels]}
+      </Badge>
+    );
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center p-8">Loading...</div>;
   }
@@ -169,9 +131,9 @@ This certificate is valid for the specified duration only.
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Bookings</h2>
+          <h2 className="text-3xl font-bold tracking-tight">My Bookings</h2>
           <p className="text-muted-foreground">
-            Manage customer bookings for your billboards
+            View your billboard bookings and manage NOC requests
           </p>
         </div>
       </div>
@@ -190,37 +152,13 @@ This certificate is valid for the specified duration only.
                     </span>
                     <span className="flex items-center">
                       <User className="mr-1 h-3 w-3" />
-                      {booking.customer.full_name}
+                      Owner: {booking.owner?.full_name || 'Unknown'}
                     </span>
                   </CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-col">
                   {getStatusBadge(booking.status)}
-                  {booking.noc_requested && (
-                    <Badge variant={booking.noc_status === 'approved' ? 'default' : 'secondary'}>
-                      NOC {booking.noc_status.toUpperCase()}
-                    </Badge>
-                  )}
-                  {(booking.status === 'confirmed' || booking.status === 'active') && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => generateNOC(booking)}
-                    >
-                      <Download className="mr-1 h-3 w-3" />
-                      Generate NOC
-                    </Button>
-                  )}
-                  {booking.noc_status === 'pending' && (
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => generateNOC(booking)}
-                    >
-                      <FileText className="mr-1 h-3 w-3" />
-                      Approve NOC Request
-                    </Button>
-                  )}
+                  {getNocStatusBadge(booking.noc_status)}
                 </div>
               </div>
             </CardHeader>
@@ -248,15 +186,15 @@ This certificate is valid for the specified duration only.
                   <div className="font-medium">${booking.total_cost}</div>
                 </div>
                 <div className="space-y-1">
-                  <div className="text-muted-foreground">Customer Email</div>
-                  <div className="font-medium">{booking.customer.email}</div>
+                  <div className="text-muted-foreground">Billboard Location</div>
+                  <div className="font-medium">{booking.billboard.location_address}</div>
                 </div>
               </div>
 
-              {booking.customer.company_name && (
+              {booking.owner?.company_name && (
                 <div className="text-sm">
-                  <span className="text-muted-foreground">Company: </span>
-                  <span className="font-medium">{booking.customer.company_name}</span>
+                  <span className="text-muted-foreground">Owner Company: </span>
+                  <span className="font-medium">{booking.owner.company_name}</span>
                 </div>
               )}
 
@@ -271,55 +209,34 @@ This certificate is valid for the specified duration only.
               )}
 
               <div className="flex gap-2">
-                {booking.status === 'pending' && (
-                  <>
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleStatusChange(booking.id, 'confirmed')}
-                    >
-                      Approve
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="destructive"
-                      onClick={() => handleStatusChange(booking.id, 'cancelled')}
-                    >
-                      Reject
-                    </Button>
-                  </>
-                )}
-                {booking.status === 'confirmed' && (
+                {booking.noc_status === 'not_requested' && booking.status === 'confirmed' && (
                   <Button 
                     size="sm" 
-                    onClick={() => handleStatusChange(booking.id, 'active')}
+                    onClick={() => applyForNOC(booking.id)}
                   >
-                    Mark Active
-                  </Button>
-                )}
-                {booking.status === 'active' && (
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleStatusChange(booking.id, 'completed')}
-                  >
-                    Mark Completed
+                    <FileText className="mr-1 h-3 w-3" />
+                    Apply for NOC
                   </Button>
                 )}
                 {booking.noc_status === 'pending' && (
-                  <>
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleNocApproval(booking.id, true)}
-                    >
-                      Approve NOC
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="destructive"
-                      onClick={() => handleNocApproval(booking.id, false)}
-                    >
-                      Reject NOC
-                    </Button>
-                  </>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    disabled
+                  >
+                    <Clock className="mr-1 h-3 w-3" />
+                    NOC Request Pending
+                  </Button>
+                )}
+                {booking.noc_status === 'approved' && (
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    disabled
+                  >
+                    <Download className="mr-1 h-3 w-3" />
+                    NOC Approved
+                  </Button>
                 )}
               </div>
             </CardContent>
@@ -333,7 +250,7 @@ This certificate is valid for the specified duration only.
             <Calendar className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No bookings yet</h3>
             <p className="text-muted-foreground text-center">
-              Customer bookings for your billboards will appear here.
+              Your billboard bookings will appear here after you make a booking.
             </p>
           </CardContent>
         </Card>

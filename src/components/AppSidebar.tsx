@@ -39,8 +39,9 @@ export function AppSidebar() {
   const customerItems = [
     { title: "Home Page", url: "/", icon: Map },
     { title: "Listings", url: "/listings", icon: List },
-    { title: "My Campaigns", url: "/campaigns", icon: Calendar },
-    { title: "Analytics", url: "/analytics", icon: BarChart3 },
+    { title: "My Bookings", url: "/my-bookings", icon: Calendar },
+    { title: "My Campaigns", url: "/campaigns", icon: BarChart3 },
+    { title: "Analytics", url: "/analytics", icon: Eye },
   ];
 
   // Owner specific items  
