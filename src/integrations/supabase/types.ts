@@ -237,7 +237,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      booking_status: "pending" | "confirmed" | "cancelled" | "completed"
+      booking_status:
+        | "pending"
+        | "confirmed"
+        | "cancelled"
+        | "completed"
+        | "active"
       traffic_score: "low" | "medium" | "high" | "premium"
       user_role: "customer" | "owner"
     }
@@ -367,7 +372,13 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      booking_status: ["pending", "confirmed", "cancelled", "completed"],
+      booking_status: [
+        "pending",
+        "confirmed",
+        "cancelled",
+        "completed",
+        "active",
+      ],
       traffic_score: ["low", "medium", "high", "premium"],
       user_role: ["customer", "owner"],
     },
