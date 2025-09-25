@@ -19,12 +19,13 @@ interface Booking {
   created_at: string;
   noc_requested: boolean;
   noc_status: string;
-  billboard: {
+  billboard?: {
     id: string;
     title: string;
     location_address: string;
+    owner_id?: string;
   };
-  customer: {
+  customer?: {
     id: string;
     full_name: string;
     email: string;
@@ -131,8 +132,8 @@ Billboard: ${booking.billboard.title}
 Location: ${booking.billboard.location_address}
 Campaign: ${booking.campaign_name}
 Duration: ${format(new Date(booking.start_date), 'PPP')} to ${format(new Date(booking.end_date), 'PPP')}
-Customer: ${booking.customer.full_name}
-${booking.customer.company_name ? `Company: ${booking.customer.company_name}` : ''}
+Customer: ${booking.customer?.full_name || 'Unknown Customer'}
+${booking.customer?.company_name ? `Company: ${booking.customer.company_name}` : ''}
 
 Approved by: ${profile?.full_name || 'Billboard Owner'}
 
@@ -192,11 +193,11 @@ This certificate is valid for the specified duration only.
                   <CardDescription className="flex items-center gap-4">
                     <span className="flex items-center">
                       <MapPin className="mr-1 h-3 w-3" />
-                      {booking.billboard.title}
+                      {booking.billboard?.title || 'Unknown Billboard'}
                     </span>
                     <span className="flex items-center">
                       <User className="mr-1 h-3 w-3" />
-                      {booking.customer.full_name}
+                      {booking.customer?.full_name || 'Unknown Customer'}
                     </span>
                   </CardDescription>
                 </div>
@@ -255,11 +256,11 @@ This certificate is valid for the specified duration only.
                 </div>
                 <div className="space-y-1">
                   <div className="text-muted-foreground">Customer Email</div>
-                  <div className="font-medium">{booking.customer.email}</div>
+                  <div className="font-medium">{booking.customer?.email || 'No email available'}</div>
                 </div>
               </div>
 
-              {booking.customer.company_name && (
+              {booking.customer?.company_name && (
                 <div className="text-sm">
                   <span className="text-muted-foreground">Company: </span>
                   <span className="font-medium">{booking.customer.company_name}</span>
