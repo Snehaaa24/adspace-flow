@@ -56,6 +56,9 @@ export function AppSidebar() {
     ? ownerItems
     : customerItems;
 
+  console.log('AppSidebar - Current profile role:', profile?.role);
+  console.log('AppSidebar - Items being shown:', items.map(i => i.title));
+
   return (
     <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
       <SidebarContent>
