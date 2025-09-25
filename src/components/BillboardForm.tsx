@@ -19,7 +19,7 @@ const billboardSchema = z.object({
   width_feet: z.number().min(1, 'Width must be at least 1 foot'),
   height_feet: z.number().min(1, 'Height must be at least 1 foot'),
   price_per_day: z.number().min(1, 'Price must be at least $1'),
-  traffic_score: z.enum(['low', 'medium', 'high']),
+  traffic_score: z.enum(['low', 'medium', 'high', 'premium']),
   daily_impressions: z.number().min(0, 'Impressions cannot be negative'),
   latitude: z.number(),
   longitude: z.number(),
@@ -220,6 +220,7 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
                         <SelectItem value="low">Low</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
                         <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="premium">Premium</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
