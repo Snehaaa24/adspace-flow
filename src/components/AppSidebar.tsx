@@ -35,28 +35,25 @@ export function AppSidebar() {
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive ? "bg-primary text-primary-foreground font-medium" : "hover:bg-accent hover:text-accent-foreground";
 
-  // Common items for both roles
-  const commonItems = [
-    { title: "Home Page", url: "/", icon: Map },
-    { title: "Listings", url: "/listings", icon: List },
-  ];
-
   // Customer specific items
   const customerItems = [
+    { title: "Home Page", url: "/", icon: Map },
+    { title: "Listings", url: "/listings", icon: List },
     { title: "My Campaigns", url: "/campaigns", icon: Calendar },
     { title: "Analytics", url: "/analytics", icon: BarChart3 },
   ];
 
   // Owner specific items  
   const ownerItems = [
+    { title: "Dashboard", url: "/", icon: BarChart3 },
     { title: "My Billboards", url: "/owner/billboards", icon: Building2 },
     { title: "Bookings", url: "/owner/bookings", icon: Calendar },
-    { title: "Analytics", url: "/analytics", icon: BarChart3 },
+    { title: "Analytics", url: "/analytics", icon: Eye },
   ];
 
   const items = profile?.role === 'owner' 
-    ? [...commonItems, ...ownerItems]
-    : [...commonItems, ...customerItems];
+    ? ownerItems
+    : customerItems;
 
   return (
     <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible="icon">
