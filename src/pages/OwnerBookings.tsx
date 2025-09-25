@@ -171,15 +171,26 @@ This certificate is valid for the specified duration only.
                 </div>
                 <div className="flex items-center gap-2">
                   {getStatusBadge(booking.status)}
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => generateNOC(booking)}
-                    disabled={booking.status !== 'confirmed' && booking.status !== 'active'}
-                  >
-                    <Download className="mr-1 h-3 w-3" />
-                    Generate NOC
-                  </Button>
+                  {(booking.status === 'confirmed' || booking.status === 'active') && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => generateNOC(booking)}
+                    >
+                      <Download className="mr-1 h-3 w-3" />
+                      Generate NOC
+                    </Button>
+                  )}
+                  {booking.status === 'pending' && (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => generateNOC(booking)}
+                    >
+                      <FileText className="mr-1 h-3 w-3" />
+                      Approve NOC Request
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardHeader>
