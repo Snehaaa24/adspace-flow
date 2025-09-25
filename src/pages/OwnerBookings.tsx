@@ -46,7 +46,7 @@ export default function OwnerBookings() {
         billboard:billboards(id, title, location_address),
         customer:profiles!bookings_customer_id_fkey(id, full_name, email, company_name)
       `)
-      .in('billboard.id', [])
+      .eq('billboard.owner_id', profile.id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -66,7 +66,7 @@ export default function OwnerBookings() {
     loadBookings();
   }, [profile]);
 
-  const handleStatusChange = async (bookingId: string, newStatus: string) => {
+  const handleStatusChange = async (bookingId: string, newStatus: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'active') => {
     const { error } = await supabase
       .from('bookings')
       .update({ status: newStatus })
