@@ -45,10 +45,9 @@ export default function OwnerBookings() {
       .from('bookings')
       .select(`
         *,
-        billboard:billboards(id, title, location_address),
-        customer:profiles!bookings_customer_id_fkey(id, full_name, email, company_name)
+        billboard:billboards(id, title, location_address, owner_id),
+        customer:profiles(id, full_name, email, company_name)
       `)
-      .eq('billboard.owner_id', profile.id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -59,7 +58,11 @@ export default function OwnerBookings() {
         variant: 'destructive',
       });
     } else {
-      setBookings(data || []);
+      // Filter bookings to only show those for billboards owned by this user
+      const ownerBookings = (data || []).filter(booking => 
+        booking.billboard?.owner_id === profile.id
+      );
+      setBookings(ownerBookings);
     }
     setLoading(false);
   };
