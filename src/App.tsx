@@ -13,6 +13,8 @@ import Listings from "./pages/Listings";
 import Campaigns from "./pages/Campaigns";
 import Analytics from "./pages/Analytics";
 import Advertiser from "./pages/Advertiser";
+import OwnerBillboards from "./pages/OwnerBillboards";
+import OwnerBookings from "./pages/OwnerBookings";
 
 const queryClient = new QueryClient();
 
@@ -31,8 +33,8 @@ const App = () => (
             <Route path="/campaigns" element={<Layout><Campaigns /></Layout>} />
             <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
             <Route path="/advertiser" element={<Layout><Advertiser /></Layout>} />
-            <Route path="/owner/billboards" element={<Layout><div>My Billboards Page</div></Layout>} />
-            <Route path="/owner/bookings" element={<Layout><div>Owner Bookings Page</div></Layout>} />
+            <Route path="/owner/billboards" element={<Layout><OwnerBillboards /></Layout>} />
+            <Route path="/owner/bookings" element={<Layout><OwnerBookings /></Layout>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

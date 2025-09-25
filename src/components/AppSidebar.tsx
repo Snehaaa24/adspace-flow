@@ -37,7 +37,7 @@ export function AppSidebar() {
 
   // Common items for both roles
   const commonItems = [
-    { title: "Map View", url: "/", icon: Map },
+    { title: "Home Page", url: "/", icon: Map },
     { title: "Listings", url: "/listings", icon: List },
   ];
 
