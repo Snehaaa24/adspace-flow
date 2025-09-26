@@ -24,7 +24,7 @@ export const Header: React.FC = () => {
       <div className="flex h-14 items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
-          <div className="font-semibold">AdSpaceManager</div>
+          <div className="font-semibold">AdWiseManager</div>
         </div>
 
         <div className="flex items-center gap-4">

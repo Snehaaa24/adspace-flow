@@ -65,7 +65,7 @@ export function AppSidebar() {
         <div className="flex items-center gap-2 px-4 py-4">
           <MapPin className="h-6 w-6 text-primary" />
           {!collapsed && (
-            <span className="text-lg font-semibold">AdSpace</span>
+            <span className="text-lg font-semibold">AdWise</span>
           )}
         </div>
 
