@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate, useSearchParams } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,23 +10,13 @@ import { useAuth } from '@/lib/auth';
 import { MapPin, Eye } from 'lucide-react';
 
 const Auth = () => {
-  const [searchParams] = useSearchParams();
-  const roleFromUrl = searchParams.get('role') as 'customer' | 'owner' | null;
-  
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<'customer' | 'owner'>(roleFromUrl || 'customer');
+  const [role, setRole] = useState<'customer' | 'owner'>('customer');
   const [loading, setLoading] = useState(false);
   const { user, signIn, signUp } = useAuth();
-
-  useEffect(() => {
-    if (roleFromUrl) {
-      setIsLogin(false);
-      setRole(roleFromUrl);
-    }
-  }, [roleFromUrl]);
 
   if (user) {
     return <Navigate to="/" replace />;
