@@ -54,6 +54,8 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
   });
 
   const onSubmit = async (data: BillboardFormData) => {
+    console.log('Form submitted with data:', data);
+    
     if (!profile) {
       toast({
         title: 'Error',
@@ -94,6 +96,15 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
       onSuccess?.();
     }
   };
+  
+  const handleFormError = (errors: any) => {
+    console.log('Form validation errors:', errors);
+    toast({
+      title: 'Validation Error',
+      description: 'Please check all required fields',
+      variant: 'destructive',
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,7 +114,7 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
         </DialogHeader>
         
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit, handleFormError)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
