@@ -99,6 +99,66 @@ export default function OwnerBookings() {
     loadBookings();
   }, [profile]);
 
+  const handleApproval = async (bookingId: string, booking: Booking) => {
+    const updates: any = { status: 'confirmed' };
+    
+    // If there's a NOC request, approve it too
+    if (booking.noc_category) {
+      updates.noc_status = 'approved';
+    }
+    
+    const { error } = await supabase
+      .from('bookings')
+      .update(updates)
+      .eq('id', bookingId);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to approve booking',
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Success',
+        description: booking.noc_category 
+          ? 'Booking and NOC approved successfully' 
+          : 'Booking approved successfully',
+      });
+      loadBookings();
+    }
+  };
+
+  const handleRejection = async (bookingId: string, booking: Booking) => {
+    const updates: any = { status: 'cancelled' };
+    
+    // If there's a NOC request, reject it too
+    if (booking.noc_category) {
+      updates.noc_status = 'rejected';
+    }
+    
+    const { error } = await supabase
+      .from('bookings')
+      .update(updates)
+      .eq('id', bookingId);
+
+    if (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to reject booking',
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Success',
+        description: booking.noc_category 
+          ? 'Booking and NOC rejected' 
+          : 'Booking rejected',
+      });
+      loadBookings();
+    }
+  };
+
   const handleStatusChange = async (bookingId: string, newStatus: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'active') => {
     const { error } = await supabase
       .from('bookings')
@@ -235,32 +295,12 @@ This certificate is valid for the specified duration only.
                     </span>
                   </CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-col">
                   {getStatusBadge(booking.status)}
-                  {booking.noc_requested && (
-                    <Badge variant={booking.noc_status === 'approved' ? 'default' : 'secondary'}>
-                      NOC {booking.noc_status.toUpperCase()}
+                  {booking.noc_category && (
+                    <Badge variant={booking.noc_status === 'approved' ? 'default' : booking.noc_status === 'rejected' ? 'destructive' : 'secondary'}>
+                      NOC: {booking.noc_category} - {booking.noc_status.toUpperCase()}
                     </Badge>
-                  )}
-                  {(booking.status === 'confirmed' || booking.status === 'active') && booking.noc_status !== 'rejected' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => generateNOC(booking)}
-                    >
-                      <Download className="mr-1 h-3 w-3" />
-                      Generate NOC
-                    </Button>
-                  )}
-                  {booking.noc_status === 'pending' && (
-                    <Button
-                      size="sm"
-                      variant="default"
-                      onClick={() => generateNOC(booking)}
-                    >
-                      <FileText className="mr-1 h-3 w-3" />
-                      Approve NOC Request
-                    </Button>
                   )}
                 </div>
               </div>
@@ -311,55 +351,69 @@ This certificate is valid for the specified duration only.
                 </div>
               )}
 
+              {booking.noc_category && (
+                <div className="text-sm">
+                  <span className="text-muted-foreground">NOC Category: </span>
+                  <span className="font-medium">{booking.noc_category}</span>
+                </div>
+              )}
+
               <div className="flex gap-2">
                 {booking.status === 'pending' && (
                   <>
                     <Button 
                       size="sm" 
-                      onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                      onClick={() => handleApproval(booking.id, booking)}
                     >
-                      Approve
+                      {booking.noc_category ? 'Approve Booking & NOC' : 'Approve Booking'}
                     </Button>
                     <Button 
                       size="sm" 
                       variant="destructive"
-                      onClick={() => handleStatusChange(booking.id, 'cancelled')}
+                      onClick={() => handleRejection(booking.id, booking)}
                     >
-                      Reject
+                      {booking.noc_category ? 'Reject Booking & NOC' : 'Reject Booking'}
                     </Button>
                   </>
                 )}
                 {booking.status === 'confirmed' && (
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleStatusChange(booking.id, 'active')}
-                  >
-                    Mark Active
-                  </Button>
-                )}
-                {booking.status === 'active' && (
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleStatusChange(booking.id, 'completed')}
-                  >
-                    Mark Completed
-                  </Button>
-                )}
-                {booking.noc_status === 'pending' && (
                   <>
                     <Button 
                       size="sm" 
-                      onClick={() => handleNocApproval(booking.id, true)}
+                      onClick={() => handleStatusChange(booking.id, 'active')}
                     >
-                      Approve NOC
+                      Mark Active
                     </Button>
+                    {booking.noc_status === 'approved' && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => generateNOC(booking)}
+                      >
+                        <Download className="mr-1 h-3 w-3" />
+                        Download NOC
+                      </Button>
+                    )}
+                  </>
+                )}
+                {booking.status === 'active' && (
+                  <>
                     <Button 
                       size="sm" 
-                      variant="destructive"
-                      onClick={() => handleNocApproval(booking.id, false)}
+                      onClick={() => handleStatusChange(booking.id, 'completed')}
                     >
-                      Reject NOC
+                      Mark Completed
                     </Button>
+                    {booking.noc_status === 'approved' && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => generateNOC(booking)}
+                      >
+                        <Download className="mr-1 h-3 w-3" />
+                        Download NOC
+                      </Button>
+                    )}
                   </>
                 )}
               </div>
