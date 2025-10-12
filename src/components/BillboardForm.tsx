@@ -14,12 +14,12 @@ import { useAuth } from '@/lib/auth';
 
 const billboardSchema = z.object({
   title: z.string().min(1, 'Title is required'),
-  location_address: z.string().min(1, 'Location is required'),
+  location: z.string().min(1, 'Location is required'),
   description: z.string().optional(),
-  width_feet: z.number().min(1, 'Width must be at least 1 foot'),
-  height_feet: z.number().min(1, 'Height must be at least 1 foot'),
-  price_per_day: z.number().min(1, 'Price must be at least $1'),
-  traffic_score: z.enum(['low', 'medium', 'high', 'premium']),
+  width: z.number().min(1, 'Width must be at least 1 meter'),
+  height: z.number().min(1, 'Height must be at least 1 meter'),
+  price_per_month: z.number().min(1, 'Price must be at least $1'),
+  traffic_score: z.enum(['low', 'medium', 'high']),
   daily_impressions: z.number().min(0, 'Impressions cannot be negative'),
   latitude: z.number(),
   longitude: z.number(),
@@ -41,11 +41,11 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
     resolver: zodResolver(billboardSchema),
     defaultValues: {
       title: '',
-      location_address: '',
+      location: '',
       description: '',
-      width_feet: 20,
-      height_feet: 10,
-      price_per_day: 100,
+      width: 6,
+      height: 3,
+      price_per_month: 3000,
       traffic_score: 'medium',
       daily_impressions: 5000,
       latitude: 40.7128,
@@ -63,19 +63,19 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
       return;
     }
 
-    const { error } = await supabase.from('billboards').insert({
+    const { error } = await supabase.from('billboards').insert([{
       title: data.title,
-      location_address: data.location_address,
+      location: data.location,
       description: data.description,
-      width_feet: data.width_feet,
-      height_feet: data.height_feet,
-      price_per_day: data.price_per_day,
+      width: data.width,
+      height: data.height,
+      price_per_month: data.price_per_month,
       traffic_score: data.traffic_score,
       daily_impressions: data.daily_impressions,
       latitude: data.latitude,
       longitude: data.longitude,
-      owner_id: profile.id,
-    });
+      owner_id: profile.user_id,
+    }]);
 
     if (error) {
       toast({
@@ -120,7 +120,7 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
               
               <FormField
                 control={form.control}
-                name="location_address"
+                name="location"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Location</FormLabel>
@@ -150,10 +150,10 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="width_feet"
+                name="width"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Width (feet)</FormLabel>
+                    <FormLabel>Width (meters)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -168,10 +168,10 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
               
               <FormField
                 control={form.control}
-                name="height_feet"
+                name="height"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Height (feet)</FormLabel>
+                    <FormLabel>Height (meters)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -188,10 +188,10 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="price_per_day"
+                name="price_per_month"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price per Day ($)</FormLabel>
+                    <FormLabel>Price per Month ($)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -220,7 +220,6 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
                         <SelectItem value="low">Low</SelectItem>
                         <SelectItem value="medium">Medium</SelectItem>
                         <SelectItem value="high">High</SelectItem>
-                        <SelectItem value="premium">Premium</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

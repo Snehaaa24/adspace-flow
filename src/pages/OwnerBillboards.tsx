@@ -11,11 +11,11 @@ import { useToast } from '@/hooks/use-toast';
 interface Billboard {
   id: string;
   title: string;
-  location_address: string;
+  location: string;
   description?: string;
-  width_feet: number;
-  height_feet: number;
-  price_per_day: number;
+  width: number;
+  height: number;
+  price_per_month: number;
   traffic_score: string;
   daily_impressions: number;
   is_available: boolean;
@@ -35,7 +35,7 @@ export default function OwnerBillboards() {
     const { data, error } = await supabase
       .from('billboards')
       .select('*')
-      .eq('owner_id', profile.id)
+      .eq('owner_id', profile.user_id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -112,7 +112,7 @@ export default function OwnerBillboards() {
                   <CardTitle className="text-lg">{billboard.title}</CardTitle>
                   <CardDescription className="flex items-center">
                     <MapPin className="mr-1 h-3 w-3" />
-                    {billboard.location_address}
+                    {billboard.location}
                   </CardDescription>
                 </div>
                 <div className="flex gap-1">
@@ -141,11 +141,11 @@ export default function OwnerBillboards() {
                 <div className="space-y-2">
                   <div className="flex items-center">
                     <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <span>{billboard.width_feet}' × {billboard.height_feet}'</span>
+                    <span>{billboard.width} × {billboard.height} m</span>
                   </div>
                   <div className="flex items-center">
                     <DollarSign className="mr-2 h-4 w-4 text-muted-foreground" />
-                    <span>${billboard.price_per_day}/day</span>
+                    <span>${billboard.price_per_month}/month</span>
                   </div>
                 </div>
                 <div className="space-y-2">

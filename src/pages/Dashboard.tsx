@@ -34,7 +34,7 @@ const Dashboard = () => {
       const { data: billboards } = await supabase
         .from('billboards')
         .select('*')
-        .eq('owner_id', profile.id);
+        .eq('owner_id', profile.user_id);
 
       const { data: bookings } = await supabase
         .from('bookings')
@@ -55,16 +55,16 @@ const Dashboard = () => {
       const { data: campaigns } = await supabase
         .from('campaigns')
         .select('*')
-        .eq('customer_id', profile.id);
+        .eq('customer_id', profile.user_id);
 
       const { data: bookings } = await supabase
         .from('bookings')
         .select('*, billboard:billboards(*)')
-        .eq('customer_id', profile.id);
+        .eq('customer_id', profile.user_id);
 
       const totalSpent = bookings?.reduce((sum, booking) => sum + Number(booking.total_cost), 0) || 0;
-      const activeCampaigns = campaigns?.filter(c => 
-        new Date(c.end_date) > new Date() && new Date(c.start_date) <= new Date()
+      const activeCampaigns = bookings?.filter(b => 
+        new Date(b.end_date) > new Date() && new Date(b.start_date) <= new Date()
       ).length || 0;
 
       setStats({

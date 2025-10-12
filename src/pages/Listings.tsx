@@ -12,14 +12,14 @@ import { BookingForm } from "@/components/BookingForm";
 interface Billboard {
   id: string;
   title: string;
-  location_address: string;
-  price_per_day: number;
+  location: string;
+  price_per_month: number;
   daily_impressions: number;
-  width_feet: number;
-  height_feet: number;
+  width: number;
+  height: number;
   is_available: boolean;
   image_url?: string;
-  traffic_score: 'low' | 'medium' | 'high' | 'premium';
+  traffic_score: 'low' | 'medium' | 'high';
 }
 
 const Listings = () => {
@@ -83,7 +83,7 @@ const Listings = () => {
 
   const filteredBillboards = billboards.filter(billboard => {
     const matchesSearch = billboard.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         billboard.location_address.toLowerCase().includes(searchTerm.toLowerCase());
+                         billboard.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatus === 'all' || 
                          (selectedStatus === 'available' && billboard.is_available) ||
                          (selectedStatus === 'unavailable' && !billboard.is_available);
@@ -163,7 +163,7 @@ const Listings = () => {
                   <CardTitle className="text-lg">{billboard.title}</CardTitle>
                   <CardDescription className="flex items-center gap-1 mt-1">
                     <MapPin className="h-3 w-3" />
-                    {billboard.location_address}
+                    {billboard.location}
                   </CardDescription>
                 </div>
                 {getStatusBadge(billboard)}
@@ -173,7 +173,7 @@ const Listings = () => {
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Size:</span>
-                  <span className="font-medium">{billboard.width_feet}x{billboard.height_feet} ft</span>
+                  <span className="font-medium">{billboard.width}x{billboard.height} m</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Traffic:</span>
@@ -189,8 +189,8 @@ const Listings = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
                     <DollarSign className="h-5 w-5 text-primary" />
-                    <span className="text-xl font-bold text-primary">${billboard.price_per_day}</span>
-                    <span className="text-muted-foreground">/day</span>
+                    <span className="text-xl font-bold text-primary">${billboard.price_per_month}</span>
+                    <span className="text-muted-foreground">/month</span>
                   </div>
                   <Button 
                     size="sm" 

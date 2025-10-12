@@ -29,8 +29,8 @@ type BookingFormData = z.infer<typeof bookingSchema>;
 interface Billboard {
   id: string;
   title: string;
-  price_per_day: number;
-  location_address: string;
+  price_per_month: number;
+  location: string;
 }
 
 interface BookingFormProps {
@@ -81,11 +81,11 @@ export function BookingForm({ open, onOpenChange, billboard, onSuccess }: Bookin
     if (!bookingData || !profile || !billboard) return;
 
     const days = Math.ceil((bookingData.end_date.getTime() - bookingData.start_date.getTime()) / (1000 * 60 * 60 * 24));
-    const totalCost = days * billboard.price_per_day;
+    const totalCost = (days / 30) * billboard.price_per_month;
 
     const { error } = await supabase.from('bookings').insert({
       billboard_id: billboard.id,
-      customer_id: profile.id,
+      customer_id: profile.user_id,
       start_date: bookingData.start_date.toISOString().split('T')[0],
       end_date: bookingData.end_date.toISOString().split('T')[0],
       campaign_name: bookingData.campaign_name,
@@ -122,7 +122,7 @@ export function BookingForm({ open, onOpenChange, billboard, onSuccess }: Bookin
 
   if (showPayment && bookingData) {
     const days = Math.ceil((bookingData.end_date.getTime() - bookingData.start_date.getTime()) / (1000 * 60 * 60 * 24));
-    const totalCost = days * billboard.price_per_day;
+    const totalCost = (days / 30) * billboard.price_per_month;
     
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -156,8 +156,8 @@ export function BookingForm({ open, onOpenChange, billboard, onSuccess }: Bookin
                   <span>{days} days</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Price per day:</span>
-                  <span>${billboard.price_per_day}</span>
+                  <span>Price per month:</span>
+                  <span>${billboard.price_per_month}</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2">
                   <span>Total:</span>
@@ -312,8 +312,8 @@ export function BookingForm({ open, onOpenChange, billboard, onSuccess }: Bookin
 
             <div className="bg-muted p-4 rounded-lg">
               <div className="flex justify-between items-center">
-                <span>Price per day:</span>
-                <span className="font-bold">${billboard.price_per_day}</span>
+                <span>Price per month:</span>
+                <span className="font-bold">${billboard.price_per_month}</span>
               </div>
               <div className="text-sm text-muted-foreground mt-1">
                 Total cost will be calculated based on selected dates
