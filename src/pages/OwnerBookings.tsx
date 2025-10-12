@@ -17,12 +17,13 @@ interface Booking {
   status: string;
   notes?: string;
   created_at: string;
-  noc_requested: boolean;
+  noc_requested?: boolean;
   noc_status: string;
+  noc_category?: string;
   billboard?: {
     id: string;
     title: string;
-    location_address: string;
+    location: string;
     owner_id?: string;
   };
   customer?: {
@@ -49,7 +50,7 @@ export default function OwnerBookings() {
       .from('bookings')
       .select(`
         *,
-        billboard:billboards(id, title, location_address, owner_id),
+        billboard:billboards(id, title, location, owner_id),
         customer:profiles(id, full_name, email, company_name)
       `)
       .order('created_at', { ascending: false });
@@ -64,7 +65,7 @@ export default function OwnerBookings() {
     } else {
       // Filter bookings to only show those for billboards owned by this user
       const ownerBookings = (data || []).filter(booking => 
-        booking.billboard?.owner_id === profile.id
+        booking.billboard?.owner_id === profile.user_id
       );
       setBookings(ownerBookings);
     }
@@ -120,6 +121,16 @@ export default function OwnerBookings() {
   };
 
   const generateNOC = async (booking: Booking) => {
+    // Only allow NOC download if status is approved or not rejected
+    if (booking.noc_status === 'rejected') {
+      toast({
+        title: 'Cannot Generate NOC',
+        description: 'NOC has been rejected and cannot be downloaded',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // Generate a simple NOC document
     const nocContent = `
 NO OBJECTION CERTIFICATE
@@ -128,8 +139,8 @@ Date: ${format(new Date(), 'PPP')}
 
 This is to certify that we have no objection to the use of our billboard:
 
-Billboard: ${booking.billboard.title}
-Location: ${booking.billboard.location_address}
+Billboard: ${booking.billboard?.title || 'N/A'}
+Location: ${booking.billboard?.location || 'N/A'}
 Campaign: ${booking.campaign_name}
 Duration: ${format(new Date(booking.start_date), 'PPP')} to ${format(new Date(booking.end_date), 'PPP')}
 Customer: ${booking.customer?.full_name || 'Unknown Customer'}
@@ -208,7 +219,7 @@ This certificate is valid for the specified duration only.
                       NOC {booking.noc_status.toUpperCase()}
                     </Badge>
                   )}
-                  {(booking.status === 'confirmed' || booking.status === 'active') && (
+                  {(booking.status === 'confirmed' || booking.status === 'active') && booking.noc_status !== 'rejected' && (
                     <Button
                       size="sm"
                       variant="outline"

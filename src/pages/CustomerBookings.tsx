@@ -7,6 +7,9 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Booking {
   id: string;
@@ -17,12 +20,13 @@ interface Booking {
   status: string;
   notes?: string;
   created_at: string;
-  noc_requested: boolean;
+  noc_requested?: boolean;
   noc_status: string;
+  noc_category?: string;
   billboard: {
     id: string;
     title: string;
-    location_address: string;
+    location: string;
     owner_id: string;
   };
   owner?: {
@@ -38,6 +42,9 @@ export default function CustomerBookings() {
   const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [nocDialogOpen, setNocDialogOpen] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState<string>('');
+  const [nocCategory, setNocCategory] = useState<string>('');
 
   const loadBookings = async () => {
     if (!profile) return;
@@ -46,9 +53,9 @@ export default function CustomerBookings() {
       .from('bookings')
       .select(`
         *,
-        billboard:billboards(id, title, location_address, owner_id)
+        billboard:billboards(id, title, location, owner_id)
       `)
-      .eq('customer_id', profile.id)
+      .eq('customer_id', profile.user_id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -68,14 +75,29 @@ export default function CustomerBookings() {
     loadBookings();
   }, [profile]);
 
-  const applyForNOC = async (bookingId: string) => {
+  const openNocDialog = (bookingId: string) => {
+    setSelectedBookingId(bookingId);
+    setNocDialogOpen(true);
+  };
+
+  const applyForNOC = async () => {
+    if (!nocCategory) {
+      toast({
+        title: 'Error',
+        description: 'Please select a category',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const { error } = await supabase
       .from('bookings')
       .update({ 
         noc_requested: true,
-        noc_status: 'pending'
+        noc_status: 'pending',
+        noc_category: nocCategory
       })
-      .eq('id', bookingId);
+      .eq('id', selectedBookingId);
 
     if (error) {
       toast({
@@ -88,6 +110,8 @@ export default function CustomerBookings() {
         title: 'Success',
         description: 'NOC request submitted successfully',
       });
+      setNocDialogOpen(false);
+      setNocCategory('');
       loadBookings();
     }
   };
@@ -187,7 +211,7 @@ export default function CustomerBookings() {
                 </div>
                 <div className="space-y-1">
                   <div className="text-muted-foreground">Billboard Location</div>
-                  <div className="font-medium">{booking.billboard.location_address}</div>
+                  <div className="font-medium">{booking.billboard.location}</div>
                 </div>
               </div>
 
@@ -212,7 +236,7 @@ export default function CustomerBookings() {
                 {booking.noc_status === 'not_requested' && booking.status === 'confirmed' && (
                   <Button 
                     size="sm" 
-                    onClick={() => applyForNOC(booking.id)}
+                    onClick={() => openNocDialog(booking.id)}
                   >
                     <FileText className="mr-1 h-3 w-3" />
                     Apply for NOC
@@ -243,6 +267,43 @@ export default function CustomerBookings() {
           </Card>
         ))}
       </div>
+
+      <Dialog open={nocDialogOpen} onOpenChange={setNocDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Apply for NOC</DialogTitle>
+            <DialogDescription>
+              Select the category for your NOC application
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Select value={nocCategory} onValueChange={setNocCategory}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="F&B">F&B</SelectItem>
+                  <SelectItem value="Electronics">Electronics</SelectItem>
+                  <SelectItem value="Healthcare">Healthcare</SelectItem>
+                  <SelectItem value="Fintech">Fintech</SelectItem>
+                  <SelectItem value="Education">Education</SelectItem>
+                  <SelectItem value="Others">Others</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNocDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={applyForNOC}>
+              Submit Application
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {bookings.length === 0 && (
         <Card>
