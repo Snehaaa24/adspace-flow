@@ -28,12 +28,12 @@ interface Booking {
     title: string;
     location: string;
     owner_id: string;
-  };
-  owner?: {
-    id: string;
-    full_name: string;
-    email: string;
-    company_name?: string;
+    owner?: {
+      user_id: string;
+      full_name: string;
+      email: string;
+      company_name?: string;
+    };
   };
 }
 
@@ -53,7 +53,13 @@ export default function CustomerBookings() {
       .from('bookings')
       .select(`
         *,
-        billboard:billboards(id, title, location, owner_id)
+        billboard:billboards(
+          id,
+          title,
+          location,
+          owner_id,
+          owner:profiles!billboards_owner_id_fkey(user_id, full_name, email, company_name)
+        )
       `)
       .eq('customer_id', profile.user_id)
       .order('created_at', { ascending: false });
@@ -176,7 +182,7 @@ export default function CustomerBookings() {
                     </span>
                     <span className="flex items-center">
                       <User className="mr-1 h-3 w-3" />
-                      Owner: {booking.owner?.full_name || 'Unknown'}
+                      Owner: {booking.billboard.owner?.full_name || 'Unknown'}
                     </span>
                   </CardDescription>
                 </div>
@@ -215,10 +221,10 @@ export default function CustomerBookings() {
                 </div>
               </div>
 
-              {booking.owner?.company_name && (
+              {booking.billboard.owner?.company_name && (
                 <div className="text-sm">
                   <span className="text-muted-foreground">Owner Company: </span>
-                  <span className="font-medium">{booking.owner.company_name}</span>
+                  <span className="font-medium">{booking.billboard.owner.company_name}</span>
                 </div>
               )}
 

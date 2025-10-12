@@ -27,7 +27,7 @@ interface Booking {
     owner_id?: string;
   };
   customer?: {
-    id: string;
+    user_id: string;
     full_name: string;
     email: string;
     company_name?: string;
@@ -46,13 +46,40 @@ export default function OwnerBookings() {
   const loadBookings = async () => {
     if (!profile) return;
 
+    // First, get the billboards owned by this user
+    const { data: myBillboards, error: billboardError } = await supabase
+      .from('billboards')
+      .select('id')
+      .eq('owner_id', profile.user_id);
+
+    if (billboardError) {
+      console.error('Error loading billboards:', billboardError);
+      toast({
+        title: 'Error',
+        description: 'Failed to load your billboards',
+        variant: 'destructive',
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (!myBillboards || myBillboards.length === 0) {
+      setBookings([]);
+      setLoading(false);
+      return;
+    }
+
+    const billboardIds = myBillboards.map(b => b.id);
+
+    // Now fetch bookings for those billboards
     const { data, error } = await supabase
       .from('bookings')
       .select(`
         *,
         billboard:billboards(id, title, location, owner_id),
-        customer:profiles(id, full_name, email, company_name)
+        customer:profiles!bookings_customer_id_fkey(user_id, full_name, email, company_name)
       `)
+      .in('billboard_id', billboardIds)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -63,11 +90,7 @@ export default function OwnerBookings() {
         variant: 'destructive',
       });
     } else {
-      // Filter bookings to only show those for billboards owned by this user
-      const ownerBookings = (data || []).filter(booking => 
-        booking.billboard?.owner_id === profile.user_id
-      );
-      setBookings(ownerBookings);
+      setBookings(data || []);
     }
     setLoading(false);
   };
