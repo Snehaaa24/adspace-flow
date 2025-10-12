@@ -19,55 +19,55 @@ export type Database = {
           created_at: string
           daily_impressions: number | null
           description: string | null
-          height_feet: number
+          height: number
           id: string
           image_url: string | null
           is_available: boolean
-          latitude: number
-          location_address: string
-          longitude: number
+          latitude: number | null
+          location: string
+          longitude: number | null
           owner_id: string
-          price_per_day: number
+          price_per_month: number
           title: string
-          traffic_score: Database["public"]["Enums"]["traffic_score"]
+          traffic_score: Database["public"]["Enums"]["traffic_score"] | null
           updated_at: string
-          width_feet: number
+          width: number
         }
         Insert: {
           created_at?: string
           daily_impressions?: number | null
           description?: string | null
-          height_feet: number
+          height: number
           id?: string
           image_url?: string | null
           is_available?: boolean
-          latitude: number
-          location_address: string
-          longitude: number
+          latitude?: number | null
+          location: string
+          longitude?: number | null
           owner_id: string
-          price_per_day: number
+          price_per_month: number
           title: string
-          traffic_score?: Database["public"]["Enums"]["traffic_score"]
+          traffic_score?: Database["public"]["Enums"]["traffic_score"] | null
           updated_at?: string
-          width_feet: number
+          width: number
         }
         Update: {
           created_at?: string
           daily_impressions?: number | null
           description?: string | null
-          height_feet?: number
+          height?: number
           id?: string
           image_url?: string | null
           is_available?: boolean
-          latitude?: number
-          location_address?: string
-          longitude?: number
+          latitude?: number | null
+          location?: string
+          longitude?: number | null
           owner_id?: string
-          price_per_day?: number
+          price_per_month?: number
           title?: string
-          traffic_score?: Database["public"]["Enums"]["traffic_score"]
+          traffic_score?: Database["public"]["Enums"]["traffic_score"] | null
           updated_at?: string
-          width_feet?: number
+          width?: number
         }
         Relationships: [
           {
@@ -75,7 +75,7 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -83,13 +83,11 @@ export type Database = {
         Row: {
           billboard_id: string
           campaign_id: string | null
-          campaign_name: string | null
+          campaign_name: string
           created_at: string
-          creative_url: string | null
           customer_id: string
           end_date: string
           id: string
-          noc_requested: boolean | null
           noc_status: string | null
           notes: string | null
           start_date: string
@@ -100,13 +98,11 @@ export type Database = {
         Insert: {
           billboard_id: string
           campaign_id?: string | null
-          campaign_name?: string | null
+          campaign_name: string
           created_at?: string
-          creative_url?: string | null
           customer_id: string
           end_date: string
           id?: string
-          noc_requested?: boolean | null
           noc_status?: string | null
           notes?: string | null
           start_date: string
@@ -117,13 +113,11 @@ export type Database = {
         Update: {
           billboard_id?: string
           campaign_id?: string | null
-          campaign_name?: string | null
+          campaign_name?: string
           created_at?: string
-          creative_url?: string | null
           customer_id?: string
           end_date?: string
           id?: string
-          noc_requested?: boolean | null
           noc_status?: string | null
           notes?: string | null
           start_date?: string
@@ -151,42 +145,39 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["user_id"]
           },
         ]
       }
       campaigns: {
         Row: {
+          budget: number | null
           created_at: string
           customer_id: string
           description: string | null
-          end_date: string | null
           id: string
           name: string
-          start_date: string | null
-          total_budget: number | null
+          status: string | null
           updated_at: string
         }
         Insert: {
+          budget?: number | null
           created_at?: string
           customer_id: string
           description?: string | null
-          end_date?: string | null
           id?: string
           name: string
-          start_date?: string | null
-          total_budget?: number | null
+          status?: string | null
           updated_at?: string
         }
         Update: {
+          budget?: number | null
           created_at?: string
           customer_id?: string
           description?: string | null
-          end_date?: string | null
           id?: string
           name?: string
-          start_date?: string | null
-          total_budget?: number | null
+          status?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -195,7 +186,7 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -246,10 +237,10 @@ export type Database = {
       booking_status:
         | "pending"
         | "confirmed"
-        | "cancelled"
-        | "completed"
         | "active"
-      traffic_score: "low" | "medium" | "high" | "premium"
+        | "completed"
+        | "cancelled"
+      traffic_score: "low" | "medium" | "high"
       user_role: "customer" | "owner"
     }
     CompositeTypes: {
@@ -381,11 +372,11 @@ export const Constants = {
       booking_status: [
         "pending",
         "confirmed",
-        "cancelled",
-        "completed",
         "active",
+        "completed",
+        "cancelled",
       ],
-      traffic_score: ["low", "medium", "high", "premium"],
+      traffic_score: ["low", "medium", "high"],
       user_role: ["customer", "owner"],
     },
   },
