@@ -78,9 +78,10 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
     }]);
 
     if (error) {
+      console.error('Billboard creation error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create billboard',
+        description: error.message || 'Failed to create billboard',
         variant: 'destructive',
       });
     } else {

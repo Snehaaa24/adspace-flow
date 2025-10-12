@@ -36,20 +36,32 @@ const Dashboard = () => {
         .select('*')
         .eq('owner_id', profile.user_id);
 
-      const { data: bookings } = await supabase
-        .from('bookings')
-        .select('*, billboard:billboards(*)')
-        .eq('billboards.owner_id', profile.id);
+      // First get billboards owned by this user
+      const { data: myBillboards } = await supabase
+        .from('billboards')
+        .select('id')
+        .eq('owner_id', profile.user_id);
 
-      const totalRevenue = bookings?.reduce((sum, booking) => sum + Number(booking.total_cost), 0) || 0;
+      const billboardIds = myBillboards?.map(b => b.id) || [];
+
+      const { data: bookings } = billboardIds.length > 0 
+        ? await supabase
+            .from('bookings')
+            .select('*, billboard:billboards(*)')
+            .in('billboard_id', billboardIds)
+        : { data: [] };
+
+      const totalRevenue = (bookings || []).reduce((sum, booking) => 
+        sum + Number(booking.total_cost), 0
+      );
 
       setStats({
         totalBillboards: billboards?.length || 0,
-        totalBookings: bookings?.length || 0,
+        totalBookings: (bookings || []).length,
         totalRevenue
       });
 
-      setRecentActivity(bookings?.slice(0, 5) || []);
+      setRecentActivity((bookings || []).slice(0, 5));
     } else {
       // Load customer dashboard data
       const { data: campaigns } = await supabase
@@ -62,19 +74,21 @@ const Dashboard = () => {
         .select('*, billboard:billboards(*)')
         .eq('customer_id', profile.user_id);
 
-      const totalSpent = bookings?.reduce((sum, booking) => sum + Number(booking.total_cost), 0) || 0;
-      const activeCampaigns = bookings?.filter(b => 
+      const totalSpent = (bookings || []).reduce((sum, booking) => 
+        sum + Number(booking.total_cost), 0
+      );
+      const activeCampaigns = (bookings || []).filter(b => 
         new Date(b.end_date) > new Date() && new Date(b.start_date) <= new Date()
-      ).length || 0;
+      ).length;
 
       setStats({
         totalCampaigns: campaigns?.length || 0,
         activeCampaigns,
-        totalBookings: bookings?.length || 0,
+        totalBookings: (bookings || []).length,
         totalSpent
       });
 
-      setRecentActivity(bookings?.slice(0, 5) || []);
+      setRecentActivity((bookings || []).slice(0, 5));
     }
   };
 
