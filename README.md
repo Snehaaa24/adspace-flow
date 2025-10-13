@@ -1,5 +1,4 @@
-## What technologies are used for this project?
-#AdWise Major Project for billboard booking
+##AdWise Major Project for billboard booking.
 
 This project is built with the following tech stack:
 
