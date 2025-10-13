@@ -1,5 +1,5 @@
 ## What technologies are used for this project?
-#AdWise Major Project
+#AdWise Major Project for billboard markrting
 This project is built with:
 
 - Vite
