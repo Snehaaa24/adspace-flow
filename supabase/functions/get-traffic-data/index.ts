@@ -48,24 +48,26 @@ serve(async (req) => {
     
     // Lower speed ratio = more congestion = higher traffic (good for billboards)
     let trafficScore: 'low' | 'medium' | 'high';
-    let trafficDensity: number;
+    let dailyImpressions: number;
     
     if (speedRatio < 0.5) {
       trafficScore = 'high';
-      trafficDensity = 90 + Math.random() * 10; // 90-100%
+      dailyImpressions = 15000 + Math.floor(Math.random() * 10000); // 15k-25k
     } else if (speedRatio < 0.75) {
       trafficScore = 'medium';
-      trafficDensity = 50 + Math.random() * 40; // 50-90%
+      dailyImpressions = 5000 + Math.floor(Math.random() * 10000); // 5k-15k
     } else {
       trafficScore = 'low';
-      trafficDensity = 10 + Math.random() * 40; // 10-50%
+      dailyImpressions = 1000 + Math.floor(Math.random() * 4000); // 1k-5k
     }
+
+    console.log('Calculated traffic metrics:', { trafficScore, dailyImpressions, speedRatio });
 
     return new Response(
       JSON.stringify({
         success: true,
         trafficScore,
-        trafficDensity: Math.round(trafficDensity),
+        dailyImpressions,
         currentSpeed,
         freeFlowSpeed,
         speedRatio: Math.round(speedRatio * 100),
