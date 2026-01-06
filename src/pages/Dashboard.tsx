@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { MapPin, DollarSign, Calendar, TrendingUp, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { BillboardMap } from '@/components/BillboardMap';
 
 interface DashboardStats {
   totalBillboards?: number;
@@ -220,6 +221,16 @@ const Dashboard = () => {
           onClick={() => navigate('/analytics')}
         />
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Explore Billboards</CardTitle>
+          <CardDescription>Browse available billboard locations on the map</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <BillboardMap />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
