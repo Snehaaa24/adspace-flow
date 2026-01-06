@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, DollarSign, MapPin, User, FileText, Download } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, User, FileText, Download, Image } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Booking {
   id: string;
@@ -20,6 +21,9 @@ interface Booking {
   noc_requested?: boolean;
   noc_status: string;
   noc_category?: string;
+  creative_image_url?: string;
+  creative_description?: string;
+  payment_status?: string;
   billboard?: {
     id: string;
     title: string;
@@ -35,18 +39,15 @@ interface Booking {
 }
 
 export default function OwnerBookings() {
-  console.log('OwnerBookings component rendering');
   const { profile } = useAuth();
   const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-
-  console.log('Profile in OwnerBookings:', profile);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const loadBookings = async () => {
     if (!profile) return;
 
-    // First, get the billboards owned by this user
     const { data: myBillboards, error: billboardError } = await supabase
       .from('billboards')
       .select('id')
@@ -71,7 +72,6 @@ export default function OwnerBookings() {
 
     const billboardIds = myBillboards.map(b => b.id);
 
-    // Now fetch bookings for those billboards
     const { data, error } = await supabase
       .from('bookings')
       .select(`
@@ -100,46 +100,36 @@ export default function OwnerBookings() {
   }, [profile]);
 
   const handleApproval = async (bookingId: string, booking: Booking) => {
-    const updates: any = { status: 'confirmed' };
-    
-    // If there's a NOC request, approve it too
-    if (booking.noc_category) {
-      updates.noc_status = 'approved';
-    }
-    
+    // Approve the NOC - customer can now pay
     const { error } = await supabase
       .from('bookings')
-      .update(updates)
+      .update({ 
+        noc_status: 'approved'
+      })
       .eq('id', bookingId);
 
     if (error) {
       toast({
         title: 'Error',
-        description: 'Failed to approve booking',
+        description: 'Failed to approve NOC',
         variant: 'destructive',
       });
     } else {
       toast({
         title: 'Success',
-        description: booking.noc_category 
-          ? 'Booking and NOC approved successfully' 
-          : 'Booking approved successfully',
+        description: 'NOC approved. Customer can now proceed with payment.',
       });
       loadBookings();
     }
   };
 
   const handleRejection = async (bookingId: string, booking: Booking) => {
-    const updates: any = { status: 'cancelled' };
-    
-    // If there's a NOC request, reject it too
-    if (booking.noc_category) {
-      updates.noc_status = 'rejected';
-    }
-    
     const { error } = await supabase
       .from('bookings')
-      .update(updates)
+      .update({ 
+        status: 'cancelled',
+        noc_status: 'rejected'
+      })
       .eq('id', bookingId);
 
     if (error) {
@@ -151,9 +141,7 @@ export default function OwnerBookings() {
     } else {
       toast({
         title: 'Success',
-        description: booking.noc_category 
-          ? 'Booking and NOC rejected' 
-          : 'Booking rejected',
+        description: 'Booking and NOC rejected',
       });
       loadBookings();
     }
@@ -180,31 +168,7 @@ export default function OwnerBookings() {
     }
   };
 
-  const handleNocApproval = async (bookingId: string, approved: boolean) => {
-    const { error } = await supabase
-      .from('bookings')
-      .update({ 
-        noc_status: approved ? 'approved' : 'rejected' 
-      })
-      .eq('id', bookingId);
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update NOC status',
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Success',
-        description: `NOC ${approved ? 'approved' : 'rejected'} successfully`,
-      });
-      loadBookings();
-    }
-  };
-
   const generateNOC = async (booking: Booking) => {
-    // Only allow NOC download if status is approved or not rejected
     if (booking.noc_status === 'rejected') {
       toast({
         title: 'Cannot Generate NOC',
@@ -214,7 +178,6 @@ export default function OwnerBookings() {
       return;
     }
 
-    // Generate a simple NOC document
     const nocContent = `
 NO OBJECTION CERTIFICATE
 
@@ -234,7 +197,6 @@ Approved by: ${profile?.full_name || 'Billboard Owner'}
 This certificate is valid for the specified duration only.
     `;
 
-    // Create and download the NOC
     const blob = new Blob([nocContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -262,6 +224,16 @@ This certificate is valid for the specified duration only.
     return <Badge variant={variants[status as keyof typeof variants]}>{status.toUpperCase()}</Badge>;
   };
 
+  const getPaymentBadge = (paymentStatus: string | undefined) => {
+    if (!paymentStatus || paymentStatus === 'pending') {
+      return <Badge variant="secondary">Payment Pending</Badge>;
+    }
+    if (paymentStatus === 'completed') {
+      return <Badge variant="default">Payment Complete</Badge>;
+    }
+    return <Badge variant="destructive">{paymentStatus}</Badge>;
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center p-8">Loading...</div>;
   }
@@ -272,7 +244,7 @@ This certificate is valid for the specified duration only.
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Bookings</h2>
           <p className="text-muted-foreground">
-            Manage customer bookings for your billboards
+            Review and approve customer bookings for your billboards
           </p>
         </div>
       </div>
@@ -297,9 +269,10 @@ This certificate is valid for the specified duration only.
                 </div>
                 <div className="flex items-center gap-2 flex-col">
                   {getStatusBadge(booking.status)}
+                  {getPaymentBadge(booking.payment_status)}
                   {booking.noc_category && (
                     <Badge variant={booking.noc_status === 'approved' ? 'default' : booking.noc_status === 'rejected' ? 'destructive' : 'secondary'}>
-                      NOC: {booking.noc_category} - {booking.noc_status.toUpperCase()}
+                      NOC: {booking.noc_status.toUpperCase()}
                     </Badge>
                   )}
                 </div>
@@ -326,7 +299,7 @@ This certificate is valid for the specified duration only.
                     <DollarSign className="mr-1 h-3 w-3" />
                     Total Cost
                   </div>
-                  <div className="font-medium">${booking.total_cost}</div>
+                  <div className="font-medium">₹{booking.total_cost}</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-muted-foreground">Customer Email</div>
@@ -334,10 +307,37 @@ This certificate is valid for the specified duration only.
                 </div>
               </div>
 
-              {booking.customer?.company_name && (
+              {booking.noc_category && (
                 <div className="text-sm">
-                  <span className="text-muted-foreground">Company: </span>
-                  <span className="font-medium">{booking.customer.company_name}</span>
+                  <span className="text-muted-foreground">NOC Category: </span>
+                  <span className="font-medium">{booking.noc_category}</span>
+                </div>
+              )}
+
+              {/* Creative Preview Section */}
+              {booking.creative_image_url && (
+                <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Image className="h-4 w-4" />
+                    Customer's Creative/Ad
+                  </div>
+                  <div 
+                    className="cursor-pointer w-fit"
+                    onClick={() => setSelectedImage(booking.creative_image_url || null)}
+                  >
+                    <img 
+                      src={booking.creative_image_url} 
+                      alt="Creative" 
+                      className="max-w-xs h-32 object-cover rounded-lg border hover:opacity-80 transition-opacity"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Click to view full size</p>
+                  </div>
+                  {booking.creative_description && (
+                    <div>
+                      <p className="text-sm text-muted-foreground">Description:</p>
+                      <p className="text-sm">{booking.creative_description}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -351,31 +351,34 @@ This certificate is valid for the specified duration only.
                 </div>
               )}
 
-              {booking.noc_category && (
-                <div className="text-sm">
-                  <span className="text-muted-foreground">NOC Category: </span>
-                  <span className="font-medium">{booking.noc_category}</span>
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                {booking.status === 'pending' && (
+              <div className="flex gap-2 flex-wrap">
+                {/* Pending bookings - Owner needs to approve/reject NOC */}
+                {booking.status === 'pending' && booking.noc_status === 'pending' && (
                   <>
                     <Button 
                       size="sm" 
                       onClick={() => handleApproval(booking.id, booking)}
                     >
-                      {booking.noc_category ? 'Approve Booking & NOC' : 'Approve Booking'}
+                      Approve NOC
                     </Button>
                     <Button 
                       size="sm" 
                       variant="destructive"
                       onClick={() => handleRejection(booking.id, booking)}
                     >
-                      {booking.noc_category ? 'Reject Booking & NOC' : 'Reject Booking'}
+                      Reject Booking & NOC
                     </Button>
                   </>
                 )}
+                
+                {/* NOC approved, waiting for payment */}
+                {booking.status === 'pending' && booking.noc_status === 'approved' && booking.payment_status === 'pending' && (
+                  <Badge variant="secondary" className="py-2">
+                    Waiting for customer payment
+                  </Badge>
+                )}
+
+                {/* Confirmed - can mark active */}
                 {booking.status === 'confirmed' && (
                   <>
                     <Button 
@@ -396,6 +399,8 @@ This certificate is valid for the specified duration only.
                     )}
                   </>
                 )}
+
+                {/* Active - can mark completed */}
                 {booking.status === 'active' && (
                   <>
                     <Button 
@@ -421,6 +426,22 @@ This certificate is valid for the specified duration only.
           </Card>
         ))}
       </div>
+
+      {/* Image Preview Dialog */}
+      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Creative Preview</DialogTitle>
+          </DialogHeader>
+          {selectedImage && (
+            <img 
+              src={selectedImage} 
+              alt="Creative full size" 
+              className="w-full h-auto rounded-lg"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {bookings.length === 0 && (
         <Card>

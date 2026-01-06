@@ -9,27 +9,21 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { CalendarIcon, CreditCard, Loader2 } from 'lucide-react';
+import { CalendarIcon, ImagePlus, Loader2, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
 
 const bookingSchema = z.object({
   start_date: z.date(),
   end_date: z.date(),
   campaign_name: z.string().min(1, 'Campaign name is required'),
   notes: z.string().optional(),
-  noc_category: z.string().optional(),
+  noc_category: z.string().min(1, 'NOC category is required'),
+  creative_description: z.string().min(1, 'Creative description is required'),
 });
 
 type BookingFormData = z.infer<typeof bookingSchema>;
@@ -51,9 +45,9 @@ interface BookingFormProps {
 export function BookingForm({ open, onOpenChange, billboard, onSuccess }: BookingFormProps) {
   const { profile } = useAuth();
   const { toast } = useToast();
-  const [showPayment, setShowPayment] = useState(false);
-  const [bookingData, setBookingData] = useState<BookingFormData | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [creativeImage, setCreativeImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
@@ -61,6 +55,7 @@ export function BookingForm({ open, onOpenChange, billboard, onSuccess }: Bookin
       campaign_name: '',
       notes: '',
       noc_category: '',
+      creative_description: '',
     },
   });
 
@@ -68,17 +63,51 @@ export function BookingForm({ open, onOpenChange, billboard, onSuccess }: Bookin
   React.useEffect(() => {
     if (!open) {
       form.reset();
-      setShowPayment(false);
-      setBookingData(null);
-      setIsProcessing(false);
+      setCreativeImage(null);
+      setImagePreview(null);
+      setIsSubmitting(false);
     }
   }, [open, form]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: 'Error',
+          description: 'Image size must be less than 5MB',
+          variant: 'destructive',
+        });
+        return;
+      }
+      setCreativeImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setCreativeImage(null);
+    setImagePreview(null);
+  };
 
   const onSubmit = async (data: BookingFormData) => {
     if (!profile || !billboard) {
       toast({
         title: 'Error',
         description: 'You must be logged in to make a booking',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!creativeImage) {
+      toast({
+        title: 'Error',
+        description: 'Please upload your creative/ad image',
         variant: 'destructive',
       });
       return;
@@ -93,221 +122,76 @@ export function BookingForm({ open, onOpenChange, billboard, onSuccess }: Bookin
       return;
     }
 
-    setBookingData(data);
-    setShowPayment(true);
-  };
-
-  const loadRazorpayScript = (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
-  const handlePayment = async () => {
-    if (!bookingData || !profile || !billboard) return;
-
-    setIsProcessing(true);
-
-    const days = Math.ceil((bookingData.end_date.getTime() - bookingData.start_date.getTime()) / (1000 * 60 * 60 * 24));
-    const totalCost = Math.round((days / 30) * billboard.price_per_month);
-    const amountInPaise = totalCost * 100;
+    setIsSubmitting(true);
 
     try {
-      // Load Razorpay script
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded) {
-        throw new Error('Failed to load Razorpay SDK');
-      }
+      // Upload creative image
+      const fileExt = creativeImage.name.split('.').pop();
+      const fileName = `${profile.user_id}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('booking-creatives')
+        .upload(fileName, creativeImage);
 
-      // Create booking first with pending status
-      const { data: booking, error: bookingError } = await supabase.from('bookings').insert({
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('booking-creatives')
+        .getPublicUrl(fileName);
+
+      const creativeImageUrl = urlData.publicUrl;
+
+      // Calculate cost
+      const days = Math.ceil((data.end_date.getTime() - data.start_date.getTime()) / (1000 * 60 * 60 * 24));
+      const totalCost = Math.round((days / 30) * billboard.price_per_month);
+
+      // Create booking with pending status (payment will happen after owner approval)
+      const { error: bookingError } = await supabase.from('bookings').insert({
         billboard_id: billboard.id,
         customer_id: profile.user_id,
-        start_date: bookingData.start_date.toISOString().split('T')[0],
-        end_date: bookingData.end_date.toISOString().split('T')[0],
-        campaign_name: bookingData.campaign_name,
-        notes: bookingData.notes,
+        start_date: data.start_date.toISOString().split('T')[0],
+        end_date: data.end_date.toISOString().split('T')[0],
+        campaign_name: data.campaign_name,
+        notes: data.notes,
         total_cost: totalCost,
         status: 'pending',
         payment_status: 'pending',
-        noc_status: bookingData.noc_category ? 'pending' : 'not_applied',
-        noc_category: bookingData.noc_category || null,
-      }).select().single();
+        noc_status: 'pending',
+        noc_category: data.noc_category,
+        creative_image_url: creativeImageUrl,
+        creative_description: data.creative_description,
+      });
 
       if (bookingError) throw bookingError;
 
-      // Create Razorpay order
-      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
-        body: {
-          amount: amountInPaise,
-          currency: 'INR',
-          receipt: booking.id,
-          notes: {
-            billboard_id: billboard.id,
-            campaign_name: bookingData.campaign_name,
-          },
-        },
+      toast({
+        title: 'Booking Request Submitted',
+        description: 'Your booking request has been sent to the billboard owner for approval. You can pay once approved.',
       });
 
-      if (orderError) throw orderError;
-
-      // Open Razorpay checkout
-      const options = {
-        key: orderData.key_id,
-        amount: amountInPaise,
-        currency: 'INR',
-        name: 'AdWiseManager',
-        description: `Booking for ${billboard.title}`,
-        order_id: orderData.order.id,
-        handler: async (response: any) => {
-          try {
-            // Verify payment
-            const { error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
-              body: {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                booking_id: booking.id,
-              },
-            });
-
-            if (verifyError) throw verifyError;
-
-            toast({
-              title: 'Payment Successful',
-              description: 'Your billboard has been booked successfully!',
-            });
-            form.reset();
-            setShowPayment(false);
-            setBookingData(null);
-            onOpenChange(false);
-            onSuccess?.();
-          } catch (error) {
-            console.error('Payment verification failed:', error);
-            toast({
-              title: 'Payment Verification Failed',
-              description: 'Please contact support if amount was deducted.',
-              variant: 'destructive',
-            });
-          }
-        },
-        prefill: {
-          email: profile.email,
-          name: profile.full_name || '',
-        },
-        theme: {
-          color: '#3399cc',
-        },
-        modal: {
-          ondismiss: () => {
-            setIsProcessing(false);
-            toast({
-              title: 'Payment Cancelled',
-              description: 'You can try again when ready.',
-            });
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
+      form.reset();
+      setCreativeImage(null);
+      setImagePreview(null);
+      onOpenChange(false);
+      onSuccess?.();
     } catch (error) {
-      console.error('Payment error:', error);
+      console.error('Booking error:', error);
       toast({
-        title: 'Payment Error',
-        description: 'Failed to initiate payment. Please try again.',
+        title: 'Error',
+        description: 'Failed to submit booking request. Please try again.',
         variant: 'destructive',
       });
     } finally {
-      setIsProcessing(false);
+      setIsSubmitting(false);
     }
-  };
-
-  const resetForm = () => {
-    setShowPayment(false);
-    setBookingData(null);
   };
 
   if (!billboard) return null;
 
-  if (showPayment && bookingData) {
-    const days = Math.ceil((bookingData.end_date.getTime() - bookingData.start_date.getTime()) / (1000 * 60 * 60 * 24));
-    const totalCost = (days / 30) * billboard.price_per_month;
-    
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Payment Gateway</DialogTitle>
-          </DialogHeader>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
-                Billboard Booking
-              </CardTitle>
-              <CardDescription>
-                Complete your booking payment
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Billboard:</span>
-                  <span className="font-medium">{billboard.title}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Campaign:</span>
-                  <span className="font-medium">{bookingData.campaign_name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Duration:</span>
-                  <span>{days} days</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Price per month:</span>
-                  <span>${billboard.price_per_month}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-2">
-                  <span>Total:</span>
-                  <span>${totalCost}</span>
-                </div>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={resetForm} className="flex-1" disabled={isProcessing}>
-                  Back
-                </Button>
-                <Button onClick={handlePayment} className="flex-1" disabled={isProcessing}>
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    `Pay ₹${totalCost}`
-                  )}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </DialogContent>
-      </Dialog>
-    );
-  }
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Book Billboard: {billboard.title}</DialogTitle>
         </DialogHeader>
@@ -414,24 +298,10 @@ export function BookingForm({ open, onOpenChange, billboard, onSuccess }: Bookin
 
             <FormField
               control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Additional notes or requirements" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="noc_category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Apply for NOC (Optional)</FormLabel>
+                  <FormLabel>NOC Category *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
@@ -452,13 +322,83 @@ export function BookingForm({ open, onOpenChange, billboard, onSuccess }: Bookin
               )}
             />
 
+            {/* Creative Image Upload */}
+            <div className="space-y-2">
+              <FormLabel>Creative/Ad Image *</FormLabel>
+              {imagePreview ? (
+                <div className="relative w-full max-w-xs">
+                  <img 
+                    src={imagePreview} 
+                    alt="Creative preview" 
+                    className="w-full h-48 object-cover rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 h-6 w-6"
+                    onClick={removeImage}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <ImagePlus className="w-8 h-8 mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      Click to upload your ad creative
+                    </p>
+                    <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
+                  </div>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                </label>
+              )}
+            </div>
+
+            <FormField
+              control={form.control}
+              name="creative_description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Creative Description *</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Describe your advertisement content, target audience, and any specific requirements..." 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Additional Notes (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Any other requirements or notes" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="bg-muted p-4 rounded-lg">
               <div className="flex justify-between items-center">
                 <span>Price per month:</span>
-                <span className="font-bold">${billboard.price_per_month}</span>
+                <span className="font-bold">₹{billboard.price_per_month}</span>
               </div>
               <div className="text-sm text-muted-foreground mt-1">
-                Total cost will be calculated based on selected dates
+                Total cost will be calculated based on selected dates. Payment will be collected after owner approval.
               </div>
             </div>
 
@@ -466,7 +406,16 @@ export function BookingForm({ open, onOpenChange, billboard, onSuccess }: Bookin
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Continue to Payment</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Booking Request'
+                )}
+              </Button>
             </div>
           </form>
         </Form>

@@ -85,6 +85,8 @@ export type Database = {
           campaign_id: string | null
           campaign_name: string
           created_at: string
+          creative_description: string | null
+          creative_image_url: string | null
           customer_id: string
           end_date: string
           id: string
@@ -104,6 +106,8 @@ export type Database = {
           campaign_id?: string | null
           campaign_name: string
           created_at?: string
+          creative_description?: string | null
+          creative_image_url?: string | null
           customer_id: string
           end_date: string
           id?: string
@@ -123,6 +127,8 @@ export type Database = {
           campaign_id?: string | null
           campaign_name?: string
           created_at?: string
+          creative_description?: string | null
+          creative_image_url?: string | null
           customer_id?: string
           end_date?: string
           id?: string
