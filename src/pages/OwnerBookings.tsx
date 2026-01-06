@@ -100,18 +100,24 @@ export default function OwnerBookings() {
   }, [profile]);
 
   const handleApproval = async (bookingId: string, booking: Booking) => {
+    console.log('handleApproval called', { bookingId, booking });
+    
     // Approve the NOC - customer can now pay
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('bookings')
       .update({ 
         noc_status: 'approved'
       })
-      .eq('id', bookingId);
+      .eq('id', bookingId)
+      .select();
+
+    console.log('Approval result:', { data, error });
 
     if (error) {
+      console.error('Approval error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to approve NOC',
+        description: 'Failed to approve NOC: ' + error.message,
         variant: 'destructive',
       });
     } else {
@@ -124,18 +130,24 @@ export default function OwnerBookings() {
   };
 
   const handleRejection = async (bookingId: string, booking: Booking) => {
-    const { error } = await supabase
+    console.log('handleRejection called', { bookingId, booking });
+    
+    const { data, error } = await supabase
       .from('bookings')
       .update({ 
         status: 'cancelled',
         noc_status: 'rejected'
       })
-      .eq('id', bookingId);
+      .eq('id', bookingId)
+      .select();
+
+    console.log('Rejection result:', { data, error });
 
     if (error) {
+      console.error('Rejection error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to reject booking',
+        description: 'Failed to reject booking: ' + error.message,
         variant: 'destructive',
       });
     } else {
