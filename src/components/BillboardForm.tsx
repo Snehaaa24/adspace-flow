@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
+import { LocationPicker } from '@/components/LocationPicker';
 
 const billboardSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -256,6 +257,15 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
                   <FormMessage />
                 </FormItem>
               )}
+            />
+
+            <LocationPicker
+              latitude={form.watch('latitude')}
+              longitude={form.watch('longitude')}
+              onLocationChange={(lat, lng) => {
+                form.setValue('latitude', lat);
+                form.setValue('longitude', lng);
+              }}
             />
 
             <div className="flex justify-end gap-2">
