@@ -1,1 +1,13 @@
 project_id = "dbqqohhuwnjpzseqinvs"
+
+[functions.create-razorpay-order]
+verify_jwt = false
+
+[functions.verify-razorpay-payment]
+verify_jwt = false
+
+[functions.get-traffic-data]
+verify_jwt = false
+
+[functions.ai-billboard-recommendations]
+verify_jwt = false
