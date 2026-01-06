@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { MapPin, DollarSign, Calendar, TrendingUp, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BillboardMap } from '@/components/BillboardMap';
-
+import { AIRecommendations } from '@/components/AIRecommendations';
 interface DashboardStats {
   totalBillboards?: number;
   totalBookings?: number;
@@ -222,6 +222,8 @@ const Dashboard = () => {
         />
       </div>
 
+      <AIRecommendations />
+
       <Card>
         <CardHeader>
           <CardTitle>Explore Billboards</CardTitle>
@@ -231,7 +233,6 @@ const Dashboard = () => {
           <BillboardMap />
         </CardContent>
       </Card>
-
       <Card>
         <CardHeader>
           <CardTitle>Recent Bookings</CardTitle>
