@@ -19,7 +19,7 @@ const billboardSchema = z.object({
   description: z.string().optional(),
   width: z.number().min(1, 'Width must be at least 1 meter'),
   height: z.number().min(1, 'Height must be at least 1 meter'),
-  price_per_month: z.number().min(1, 'Price must be at least $1'),
+  price_per_month: z.number().min(1, 'Price must be at least ₹1'),
   latitude: z.number(),
   longitude: z.number(),
 });
@@ -45,9 +45,9 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
       description: '',
       width: 6,
       height: 3,
-      price_per_month: 3000,
-      latitude: 40.7128,
-      longitude: -74.0060,
+      price_per_month: 50000,
+      latitude: 19.0760,
+      longitude: 72.8777,
     },
   });
 
@@ -230,7 +230,7 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
                 name="price_per_month"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price/Month ($)</FormLabel>
+                    <FormLabel>Price/Month (₹)</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
@@ -251,9 +251,22 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
             <LocationPicker
               latitude={form.watch('latitude')}
               longitude={form.watch('longitude')}
-              onLocationChange={(lat, lng) => {
+              onLocationChange={async (lat, lng) => {
                 form.setValue('latitude', lat);
                 form.setValue('longitude', lng);
+                
+                // Reverse geocode to get address
+                try {
+                  const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+                  );
+                  const data = await response.json();
+                  if (data.display_name) {
+                    form.setValue('location', data.display_name);
+                  }
+                } catch (error) {
+                  console.error('Reverse geocoding failed:', error);
+                }
               }}
             />
 
