@@ -71,10 +71,9 @@ export function CampaignForm({ open, onOpenChange, onSuccess }: CampaignFormProp
     const { error } = await supabase.from('campaigns').insert({
       name: campaignData.name,
       description: campaignData.description,
-      start_date: campaignData.start_date.toISOString().split('T')[0],
-      end_date: campaignData.end_date.toISOString().split('T')[0],
-      total_budget: campaignData.total_budget,
-      customer_id: profile.id,
+      budget: campaignData.total_budget,
+      customer_id: profile.user_id,
+      status: 'active',
     });
 
     if (error) {
