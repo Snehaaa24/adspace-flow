@@ -44,14 +44,51 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Update booking with payment details
+    // Get booking details first
+    const { data: booking, error: fetchError } = await supabaseClient
+      .from('bookings')
+      .select('customer_id, campaign_name, campaign_id, total_cost')
+      .eq('id', booking_id)
+      .single();
+
+    if (fetchError || !booking) {
+      console.error('Error fetching booking:', fetchError);
+      throw new Error('Failed to fetch booking details');
+    }
+
+    let campaignId = booking.campaign_id;
+
+    // If no campaign exists, create one automatically
+    if (!campaignId) {
+      const { data: newCampaign, error: campaignError } = await supabaseClient
+        .from('campaigns')
+        .insert({
+          customer_id: booking.customer_id,
+          name: booking.campaign_name,
+          description: `Auto-created campaign from billboard booking`,
+          budget: booking.total_cost,
+          status: 'active'
+        })
+        .select('id')
+        .single();
+
+      if (campaignError) {
+        console.error('Error creating campaign:', campaignError);
+        // Don't fail the payment, just log the error
+      } else {
+        campaignId = newCampaign.id;
+      }
+    }
+
+    // Update booking with payment details and campaign link
     const { error: updateError } = await supabaseClient
       .from('bookings')
       .update({
         payment_status: 'completed',
         razorpay_order_id,
         razorpay_payment_id,
-        status: 'confirmed'
+        status: 'confirmed',
+        campaign_id: campaignId
       })
       .eq('id', booking_id);
 
