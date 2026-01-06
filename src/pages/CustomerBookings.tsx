@@ -2,14 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, DollarSign, MapPin, User, FileText, Download, Clock } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, User, FileText, Clock, CreditCard, Loader2, Image } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 interface Booking {
   id: string;
@@ -23,6 +27,9 @@ interface Booking {
   noc_requested?: boolean;
   noc_status: string;
   noc_category?: string;
+  payment_status?: string;
+  creative_image_url?: string;
+  creative_description?: string;
   billboard: {
     id: string;
     title: string;
@@ -42,9 +49,8 @@ export default function CustomerBookings() {
   const { toast } = useToast();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [nocDialogOpen, setNocDialogOpen] = useState(false);
-  const [selectedBookingId, setSelectedBookingId] = useState<string>('');
-  const [nocCategory, setNocCategory] = useState<string>('');
+  const [payingBookingId, setPayingBookingId] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const loadBookings = async () => {
     if (!profile) return;
@@ -81,44 +87,118 @@ export default function CustomerBookings() {
     loadBookings();
   }, [profile]);
 
-  const openNocDialog = (bookingId: string) => {
-    setSelectedBookingId(bookingId);
-    setNocDialogOpen(true);
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
   };
 
-  const applyForNOC = async () => {
-    if (!nocCategory) {
+  const handlePayment = async (booking: Booking) => {
+    if (!profile) return;
+    
+    setPayingBookingId(booking.id);
+    const amountInPaise = booking.total_cost * 100;
+
+    try {
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        throw new Error('Failed to load Razorpay SDK');
+      }
+
+      // Create Razorpay order
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
+        body: {
+          amount: amountInPaise,
+          currency: 'INR',
+          receipt: booking.id,
+          notes: {
+            billboard_id: booking.billboard.id,
+            campaign_name: booking.campaign_name,
+          },
+        },
+      });
+
+      if (orderError) throw orderError;
+
+      // Update booking with order ID
+      await supabase
+        .from('bookings')
+        .update({ razorpay_order_id: orderData.order.id })
+        .eq('id', booking.id);
+
+      // Open Razorpay checkout
+      const options = {
+        key: orderData.key_id,
+        amount: amountInPaise,
+        currency: 'INR',
+        name: 'AdWiseManager',
+        description: `Booking for ${booking.billboard.title}`,
+        order_id: orderData.order.id,
+        handler: async (response: any) => {
+          try {
+            // Verify payment
+            const { error: verifyError } = await supabase.functions.invoke('verify-razorpay-payment', {
+              body: {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                booking_id: booking.id,
+              },
+            });
+
+            if (verifyError) throw verifyError;
+
+            toast({
+              title: 'Payment Successful',
+              description: 'Your billboard has been booked successfully!',
+            });
+            loadBookings();
+          } catch (error) {
+            console.error('Payment verification failed:', error);
+            toast({
+              title: 'Payment Verification Failed',
+              description: 'Please contact support if amount was deducted.',
+              variant: 'destructive',
+            });
+          }
+        },
+        prefill: {
+          email: profile.email,
+          name: profile.full_name || '',
+        },
+        theme: {
+          color: '#3399cc',
+        },
+        modal: {
+          ondismiss: () => {
+            setPayingBookingId(null);
+            toast({
+              title: 'Payment Cancelled',
+              description: 'You can try again when ready.',
+            });
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error('Payment error:', error);
       toast({
-        title: 'Error',
-        description: 'Please select a category',
+        title: 'Payment Error',
+        description: 'Failed to initiate payment. Please try again.',
         variant: 'destructive',
       });
-      return;
-    }
-
-    const { error } = await supabase
-      .from('bookings')
-      .update({ 
-        noc_requested: true,
-        noc_status: 'pending',
-        noc_category: nocCategory
-      })
-      .eq('id', selectedBookingId);
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to request NOC',
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Success',
-        description: 'NOC request submitted successfully',
-      });
-      setNocDialogOpen(false);
-      setNocCategory('');
-      loadBookings();
+    } finally {
+      setPayingBookingId(null);
     }
   };
 
@@ -136,19 +216,21 @@ export default function CustomerBookings() {
   const getNocStatusBadge = (nocStatus: string) => {
     const variants = {
       not_requested: 'secondary' as const,
+      not_applied: 'secondary' as const,
       pending: 'secondary' as const,
       approved: 'default' as const,
       rejected: 'destructive' as const,
     };
     const labels = {
-      not_requested: 'NOC Not Requested',
-      pending: 'NOC Pending',
+      not_requested: 'NOC Pending Review',
+      not_applied: 'NOC Pending Review',
+      pending: 'NOC Pending Review',
       approved: 'NOC Approved',
       rejected: 'NOC Rejected',
     };
     return (
       <Badge variant={variants[nocStatus as keyof typeof variants]}>
-        {labels[nocStatus as keyof typeof labels]}
+        {labels[nocStatus as keyof typeof labels] || nocStatus.toUpperCase()}
       </Badge>
     );
   };
@@ -163,7 +245,7 @@ export default function CustomerBookings() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">My Bookings</h2>
           <p className="text-muted-foreground">
-            View your billboard bookings and manage NOC requests
+            View your billboard bookings and complete payments after approval
           </p>
         </div>
       </div>
@@ -213,7 +295,7 @@ export default function CustomerBookings() {
                     <DollarSign className="mr-1 h-3 w-3" />
                     Total Cost
                   </div>
-                  <div className="font-medium">${booking.total_cost}</div>
+                  <div className="font-medium">₹{booking.total_cost}</div>
                 </div>
                 <div className="space-y-1">
                   <div className="text-muted-foreground">Billboard Location</div>
@@ -221,10 +303,33 @@ export default function CustomerBookings() {
                 </div>
               </div>
 
-              {booking.billboard.owner?.company_name && (
+              {booking.noc_category && (
                 <div className="text-sm">
-                  <span className="text-muted-foreground">Owner Company: </span>
-                  <span className="font-medium">{booking.billboard.owner.company_name}</span>
+                  <span className="text-muted-foreground">NOC Category: </span>
+                  <span className="font-medium">{booking.noc_category}</span>
+                </div>
+              )}
+
+              {/* Show submitted creative */}
+              {booking.creative_image_url && (
+                <div className="border rounded-lg p-4 space-y-2 bg-muted/30">
+                  <div className="flex items-center gap-2 text-sm font-medium">
+                    <Image className="h-4 w-4" />
+                    Your Submitted Creative
+                  </div>
+                  <div 
+                    className="cursor-pointer w-fit"
+                    onClick={() => setSelectedImage(booking.creative_image_url || null)}
+                  >
+                    <img 
+                      src={booking.creative_image_url} 
+                      alt="Creative" 
+                      className="max-w-xs h-24 object-cover rounded-lg border hover:opacity-80 transition-opacity"
+                    />
+                  </div>
+                  {booking.creative_description && (
+                    <p className="text-sm text-muted-foreground">{booking.creative_description}</p>
+                  )}
                 </div>
               )}
 
@@ -238,35 +343,49 @@ export default function CustomerBookings() {
                 </div>
               )}
 
-              <div className="flex gap-2">
-                {booking.noc_status === 'not_requested' && booking.status === 'confirmed' && (
+              <div className="flex gap-2 flex-wrap">
+                {/* Pending NOC - waiting for approval */}
+                {booking.status === 'pending' && booking.noc_status === 'pending' && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted px-3 py-2 rounded-lg">
+                    <Clock className="h-4 w-4" />
+                    Waiting for owner to review and approve your NOC request
+                  </div>
+                )}
+
+                {/* NOC Approved - can pay now */}
+                {booking.status === 'pending' && booking.noc_status === 'approved' && booking.payment_status === 'pending' && (
                   <Button 
                     size="sm" 
-                    onClick={() => openNocDialog(booking.id)}
+                    onClick={() => handlePayment(booking)}
+                    disabled={payingBookingId === booking.id}
                   >
-                    <FileText className="mr-1 h-3 w-3" />
-                    Apply for NOC
+                    {payingBookingId === booking.id ? (
+                      <>
+                        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="mr-1 h-4 w-4" />
+                        Pay ₹{booking.total_cost}
+                      </>
+                    )}
                   </Button>
                 )}
-                {booking.noc_status === 'pending' && (
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    disabled
-                  >
-                    <Clock className="mr-1 h-3 w-3" />
-                    NOC Request Pending
-                  </Button>
+
+                {/* NOC Rejected */}
+                {booking.noc_status === 'rejected' && (
+                  <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg">
+                    Your NOC request was rejected by the owner
+                  </div>
                 )}
-                {booking.noc_status === 'approved' && (
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    disabled
-                  >
-                    <Download className="mr-1 h-3 w-3" />
-                    NOC Approved
-                  </Button>
+
+                {/* Payment completed */}
+                {booking.payment_status === 'completed' && (
+                  <Badge variant="default" className="py-2">
+                    <CreditCard className="mr-1 h-3 w-3" />
+                    Payment Complete
+                  </Badge>
                 )}
               </div>
             </CardContent>
@@ -274,40 +393,19 @@ export default function CustomerBookings() {
         ))}
       </div>
 
-      <Dialog open={nocDialogOpen} onOpenChange={setNocDialogOpen}>
-        <DialogContent>
+      {/* Image Preview Dialog */}
+      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Apply for NOC</DialogTitle>
-            <DialogDescription>
-              Select the category for your NOC application
-            </DialogDescription>
+            <DialogTitle>Creative Preview</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select value={nocCategory} onValueChange={setNocCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="F&B">F&B</SelectItem>
-                  <SelectItem value="Electronics">Electronics</SelectItem>
-                  <SelectItem value="Healthcare">Healthcare</SelectItem>
-                  <SelectItem value="Fintech">Fintech</SelectItem>
-                  <SelectItem value="Education">Education</SelectItem>
-                  <SelectItem value="Others">Others</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setNocDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={applyForNOC}>
-              Submit Application
-            </Button>
-          </DialogFooter>
+          {selectedImage && (
+            <img 
+              src={selectedImage} 
+              alt="Creative full size" 
+              className="w-full h-auto rounded-lg"
+            />
+          )}
         </DialogContent>
       </Dialog>
 
