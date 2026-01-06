@@ -64,6 +64,26 @@ const Campaigns = () => {
 
   useEffect(() => {
     loadCampaigns();
+
+    // Subscribe to real-time updates for campaigns
+    const channel = supabase
+      .channel('campaigns-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'campaigns'
+        },
+        () => {
+          loadCampaigns();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [profile]);
 
   const handleStatusChange = async (campaign: Campaign, newStatus: string) => {
