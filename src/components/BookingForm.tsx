@@ -64,6 +64,16 @@ export function BookingForm({ open, onOpenChange, billboard, onSuccess }: Bookin
     },
   });
 
+  // Reset form and state when dialog opens/closes
+  React.useEffect(() => {
+    if (!open) {
+      form.reset();
+      setShowPayment(false);
+      setBookingData(null);
+      setIsProcessing(false);
+    }
+  }, [open, form]);
+
   const onSubmit = async (data: BookingFormData) => {
     if (!profile || !billboard) {
       toast({
