@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
-import { Icon, LatLng } from 'leaflet';
+import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
