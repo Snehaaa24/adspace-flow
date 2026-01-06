@@ -25,9 +25,9 @@ serve(async (req) => {
 
     console.log('Creating Razorpay order for amount:', amount);
 
-    // Create Razorpay order
+    // Create Razorpay order (amount is already in paise from frontend)
     const orderData = {
-      amount: Math.round(amount * 100), // Razorpay expects amount in paise
+      amount: Math.round(amount),
       currency,
       receipt,
       notes: notes || {},
@@ -53,7 +53,7 @@ serve(async (req) => {
     console.log('Razorpay order created:', order.id);
 
     return new Response(
-      JSON.stringify({ order }),
+      JSON.stringify({ order, key_id: keyId }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
