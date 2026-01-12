@@ -16,6 +16,7 @@ import Advertiser from "./pages/Advertiser";
 import OwnerBillboards from "./pages/OwnerBillboards";
 import OwnerBookings from "./pages/OwnerBookings";
 import CustomerBookings from "./pages/CustomerBookings";
+import SystemDocumentation from "./pages/SystemDocumentation";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
             <Route path="/owner/billboards" element={<Layout><OwnerBillboards /></Layout>} />
             <Route path="/owner/bookings" element={<Layout><OwnerBookings /></Layout>} />
             <Route path="/my-bookings" element={<Layout><CustomerBookings /></Layout>} />
+            <Route path="/docs" element={<SystemDocumentation />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
