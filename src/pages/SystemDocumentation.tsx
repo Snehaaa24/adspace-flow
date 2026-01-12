@@ -39,6 +39,8 @@ const SystemDocumentation = () => {
           <li>Edge Functions & APIs</li>
           <li>External Integrations</li>
           <li>Data Flow Diagrams</li>
+          <li className="font-semibold text-blue-700">Page Authority Scores</li>
+          <li className="font-semibold text-purple-700">Algorithm & Model Insights</li>
         </ol>
       </section>
 
@@ -410,6 +412,322 @@ const SystemDocumentation = () => {
          → create-razorpay-order → Razorpay checkout
          → verify-razorpay-payment → Update booking (confirmed)
          → Owner notified of new booking`}
+            </pre>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. Page Authority Scores */}
+      <section className="mb-10 page-break-before">
+        <h2 className="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">9. Page Authority Scores</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Authority Score indicates page importance based on data dependencies, user interactions, and business criticality (1-10 scale).
+        </p>
+        
+        <div className="grid grid-cols-1 gap-4">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="text-left p-3">Page</th>
+                <th className="text-left p-3">Route</th>
+                <th className="text-center p-3">Authority Score</th>
+                <th className="text-left p-3">Justification</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b bg-red-50">
+                <td className="p-3 font-medium">Dashboard</td>
+                <td className="p-3"><code>/dashboard</code></td>
+                <td className="p-3 text-center"><span className="bg-red-500 text-white px-2 py-1 rounded font-bold">10</span></td>
+                <td className="p-3">Central hub; aggregates all user data, stats, and navigation</td>
+              </tr>
+              <tr className="border-b bg-red-50">
+                <td className="p-3 font-medium">Auth</td>
+                <td className="p-3"><code>/auth</code></td>
+                <td className="p-3 text-center"><span className="bg-red-500 text-white px-2 py-1 rounded font-bold">10</span></td>
+                <td className="p-3">Critical security gate; all protected routes depend on it</td>
+              </tr>
+              <tr className="border-b bg-orange-50">
+                <td className="p-3 font-medium">Listings</td>
+                <td className="p-3"><code>/listings</code></td>
+                <td className="p-3 text-center"><span className="bg-orange-500 text-white px-2 py-1 rounded font-bold">9</span></td>
+                <td className="p-3">Primary discovery interface; drives booking conversions</td>
+              </tr>
+              <tr className="border-b bg-orange-50">
+                <td className="p-3 font-medium">Owner Billboards</td>
+                <td className="p-3"><code>/my-billboards</code></td>
+                <td className="p-3 text-center"><span className="bg-orange-500 text-white px-2 py-1 rounded font-bold">9</span></td>
+                <td className="p-3">Core inventory management; CRUD operations with external API calls</td>
+              </tr>
+              <tr className="border-b bg-yellow-50">
+                <td className="p-3 font-medium">Advertiser (AI Recommendations)</td>
+                <td className="p-3"><code>/advertiser</code></td>
+                <td className="p-3 text-center"><span className="bg-yellow-500 text-white px-2 py-1 rounded font-bold">8</span></td>
+                <td className="p-3">AI-powered; integrates LLM + database + external traffic data</td>
+              </tr>
+              <tr className="border-b bg-yellow-50">
+                <td className="p-3 font-medium">Customer Bookings</td>
+                <td className="p-3"><code>/my-bookings</code></td>
+                <td className="p-3 text-center"><span className="bg-yellow-500 text-white px-2 py-1 rounded font-bold">8</span></td>
+                <td className="p-3">Payment integration; booking lifecycle management</td>
+              </tr>
+              <tr className="border-b bg-yellow-50">
+                <td className="p-3 font-medium">Owner Bookings</td>
+                <td className="p-3"><code>/owner-bookings</code></td>
+                <td className="p-3 text-center"><span className="bg-yellow-500 text-white px-2 py-1 rounded font-bold">8</span></td>
+                <td className="p-3">Revenue tracking; booking approval workflow</td>
+              </tr>
+              <tr className="border-b bg-green-50">
+                <td className="p-3 font-medium">Map View</td>
+                <td className="p-3"><code>/map</code></td>
+                <td className="p-3 text-center"><span className="bg-green-500 text-white px-2 py-1 rounded font-bold">7</span></td>
+                <td className="p-3">Geospatial visualization; real-time map rendering</td>
+              </tr>
+              <tr className="border-b bg-green-50">
+                <td className="p-3 font-medium">Campaigns</td>
+                <td className="p-3"><code>/campaigns</code></td>
+                <td className="p-3 text-center"><span className="bg-green-500 text-white px-2 py-1 rounded font-bold">7</span></td>
+                <td className="p-3">Campaign grouping; budget tracking across bookings</td>
+              </tr>
+              <tr className="border-b bg-green-50">
+                <td className="p-3 font-medium">Analytics</td>
+                <td className="p-3"><code>/analytics</code></td>
+                <td className="p-3 text-center"><span className="bg-green-500 text-white px-2 py-1 rounded font-bold">7</span></td>
+                <td className="p-3">Data aggregation; chart rendering with Recharts</td>
+              </tr>
+              <tr className="border-b bg-blue-50">
+                <td className="p-3 font-medium">Home (Index)</td>
+                <td className="p-3"><code>/</code></td>
+                <td className="p-3 text-center"><span className="bg-blue-500 text-white px-2 py-1 rounded font-bold">6</span></td>
+                <td className="p-3">Landing page; minimal data dependencies</td>
+              </tr>
+              <tr className="bg-gray-50">
+                <td className="p-3 font-medium">Documentation</td>
+                <td className="p-3"><code>/docs</code></td>
+                <td className="p-3 text-center"><span className="bg-gray-500 text-white px-2 py-1 rounded font-bold">3</span></td>
+                <td className="p-3">Static documentation; no database interactions</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {/* 10. Algorithm & Model Insights */}
+      <section className="mb-10 page-break-before">
+        <h2 className="text-2xl font-bold mb-4 text-gray-800 border-b pb-2">10. Algorithm & Model Insights</h2>
+        
+        <div className="space-y-6">
+          {/* AI Recommendation System */}
+          <div className="bg-purple-50 p-5 rounded-lg border-l-4 border-purple-500">
+            <h3 className="font-bold text-lg mb-3 text-purple-800">🤖 AI Billboard Recommendation Engine</h3>
+            
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <h4 className="font-semibold text-sm text-purple-700">Model</h4>
+                <p className="text-sm text-gray-700">Google Gemini 2.5 Flash (via Lovable AI Gateway)</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-purple-700">Architecture</h4>
+                <p className="text-sm text-gray-700">Large Language Model (Transformer-based)</p>
+              </div>
+            </div>
+
+            <h4 className="font-semibold text-sm text-purple-700 mb-2">Algorithm Flow:</h4>
+            <pre className="bg-white p-3 rounded text-xs font-mono overflow-x-auto">
+{`1. INPUT PROCESSING
+   ├── Parse: budget (₹), preferred_traffic (low/medium/high), location_preference (text)
+   └── Validate constraints and normalize values
+
+2. DATA RETRIEVAL
+   ├── Query: SELECT * FROM billboards WHERE is_available = true
+   └── Enrich with traffic_score, daily_impressions, location metadata
+
+3. PROMPT ENGINEERING
+   ├── System prompt: Billboard advertising expert role
+   ├── Context injection: All available billboard data as structured JSON
+   └── User constraints: Budget ceiling, traffic preference, location keywords
+
+4. LLM INFERENCE (Gemini 2.5 Flash)
+   ├── Multi-factor scoring:
+   │   ├── Budget fit: price_per_month ≤ budget (weighted 30%)
+   │   ├── Traffic match: traffic_score alignment (weighted 40%)
+   │   └── Location relevance: semantic similarity (weighted 30%)
+   └── Generate: match_score (0-100), reason, highlights[], trade_offs[]
+
+5. RESPONSE PROCESSING
+   ├── Parse JSON response with fallback mechanism
+   ├── Enrich recommendations with full billboard details
+   └── Sort by match_score DESC, return top-N results`}
+            </pre>
+
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              <div className="bg-white p-3 rounded">
+                <h5 className="font-semibold text-xs text-gray-600">Latency</h5>
+                <p className="text-lg font-bold text-purple-700">1-3s</p>
+              </div>
+              <div className="bg-white p-3 rounded">
+                <h5 className="font-semibold text-xs text-gray-600">Context Window</h5>
+                <p className="text-lg font-bold text-purple-700">1M tokens</p>
+              </div>
+              <div className="bg-white p-3 rounded">
+                <h5 className="font-semibold text-xs text-gray-600">Output Format</h5>
+                <p className="text-lg font-bold text-purple-700">Structured JSON</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Traffic Scoring Algorithm */}
+          <div className="bg-blue-50 p-5 rounded-lg border-l-4 border-blue-500">
+            <h3 className="font-bold text-lg mb-3 text-blue-800">🚦 Traffic Scoring Algorithm</h3>
+            
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <h4 className="font-semibold text-sm text-blue-700">Data Source</h4>
+                <p className="text-sm text-gray-700">TomTom Traffic Flow API (Real-time)</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-blue-700">Update Frequency</h4>
+                <p className="text-sm text-gray-700">On-demand (billboard creation/update)</p>
+              </div>
+            </div>
+
+            <h4 className="font-semibold text-sm text-blue-700 mb-2">Scoring Mechanism:</h4>
+            <pre className="bg-white p-3 rounded text-xs font-mono overflow-x-auto">
+{`TRAFFIC FLOW API RESPONSE:
+{
+  "currentSpeed": number (km/h),
+  "freeFlowSpeed": number (km/h),
+  "currentTravelTime": number (seconds),
+  "freeFlowTravelTime": number (seconds),
+  "confidence": number (0-1)
+}
+
+SCORING ALGORITHM:
+┌─────────────────────────────────────────────────────────────┐
+│  trafficRatio = currentSpeed / freeFlowSpeed                │
+│                                                             │
+│  if (trafficRatio < 0.5)  → "high" traffic                 │
+│     // Congested: more vehicles = more impressions          │
+│     dailyImpressions = random(22000, 25000)                 │
+│                                                             │
+│  else if (trafficRatio < 0.75) → "medium" traffic          │
+│     // Moderate flow                                        │
+│     dailyImpressions = random(18000, 22000)                 │
+│                                                             │
+│  else → "low" traffic                                       │
+│     // Free-flowing: fewer stops, less visibility           │
+│     dailyImpressions = random(15000, 18000)                 │
+└─────────────────────────────────────────────────────────────┘
+
+RATIONALE:
+• Lower speed ratio = more congestion = longer exposure time
+• High congestion areas = premium pricing potential
+• Impressions estimated based on traffic volume models`}
+            </pre>
+          </div>
+
+          {/* Geolocation & Geocoding */}
+          <div className="bg-green-50 p-5 rounded-lg border-l-4 border-green-500">
+            <h3 className="font-bold text-lg mb-3 text-green-800">📍 Geolocation & Reverse Geocoding</h3>
+            
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <h4 className="font-semibold text-sm text-green-700">Map Tiles</h4>
+                <p className="text-sm text-gray-700">OpenStreetMap via Leaflet.js</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-green-700">Geocoding</h4>
+                <p className="text-sm text-gray-700">Nominatim API (OSM)</p>
+              </div>
+            </div>
+
+            <h4 className="font-semibold text-sm text-green-700 mb-2">Mechanism:</h4>
+            <pre className="bg-white p-3 rounded text-xs font-mono overflow-x-auto">
+{`USER INTERACTION:
+┌─────────────────────────────────────────────────────┐
+│  1. User clicks on map (Leaflet click event)       │
+│  2. Extract: { lat: number, lng: number }          │
+│  3. Call Nominatim reverse geocode API:            │
+│     GET nominatim.openstreetmap.org/reverse        │
+│       ?lat={lat}&lon={lng}&format=json             │
+│  4. Parse response → display_name (address string) │
+│  5. Update form fields with coordinates + address  │
+└─────────────────────────────────────────────────────┘
+
+COORDINATE SYSTEM: WGS84 (EPSG:4326)
+MAP PROJECTION: Web Mercator (EPSG:3857)`}
+            </pre>
+          </div>
+
+          {/* Payment Flow */}
+          <div className="bg-orange-50 p-5 rounded-lg border-l-4 border-orange-500">
+            <h3 className="font-bold text-lg mb-3 text-orange-800">💳 Payment Processing (Razorpay)</h3>
+            
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <h4 className="font-semibold text-sm text-orange-700">Gateway</h4>
+                <p className="text-sm text-gray-700">Razorpay (India)</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-orange-700">Currency</h4>
+                <p className="text-sm text-gray-700">INR (₹)</p>
+              </div>
+            </div>
+
+            <h4 className="font-semibold text-sm text-orange-700 mb-2">Security Mechanism:</h4>
+            <pre className="bg-white p-3 rounded text-xs font-mono overflow-x-auto">
+{`ORDER CREATION (Server-side):
+┌─────────────────────────────────────────────────────┐
+│  1. Edge Function receives: { amount, booking_id }  │
+│  2. Create Razorpay order via Orders API           │
+│  3. Return: { order_id, key_id }                   │
+└─────────────────────────────────────────────────────┘
+
+PAYMENT VERIFICATION (HMAC-SHA256):
+┌─────────────────────────────────────────────────────┐
+│  signature = HMAC_SHA256(                          │
+│    order_id + "|" + payment_id,                    │
+│    RAZORPAY_KEY_SECRET                             │
+│  )                                                 │
+│                                                    │
+│  if (signature === razorpay_signature) {           │
+│    → Update booking status to "confirmed"          │
+│    → Set payment_status to "completed"             │
+│  } else {                                          │
+│    → Reject: signature mismatch (fraud attempt)    │
+│  }                                                 │
+└─────────────────────────────────────────────────────┘`}
+            </pre>
+          </div>
+
+          {/* RLS Security Model */}
+          <div className="bg-red-50 p-5 rounded-lg border-l-4 border-red-500">
+            <h3 className="font-bold text-lg mb-3 text-red-800">🔐 Row Level Security (RLS) Model</h3>
+            
+            <h4 className="font-semibold text-sm text-red-700 mb-2">Policy Enforcement:</h4>
+            <pre className="bg-white p-3 rounded text-xs font-mono overflow-x-auto">
+{`AUTHENTICATION CONTEXT:
+  auth.uid() → Current user's UUID from Supabase Auth
+
+POLICY PATTERN:
+┌─────────────────────────────────────────────────────────────┐
+│  CREATE POLICY "policy_name"                                │
+│  ON public.table_name                                       │
+│  FOR [SELECT | INSERT | UPDATE | DELETE]                    │
+│  USING (auth.uid() = user_id)  -- Row-level check          │
+│  WITH CHECK (auth.uid() = user_id)  -- Insert/Update check │
+└─────────────────────────────────────────────────────────────┘
+
+EXAMPLE: billboards table
+  • SELECT: true (anyone can view)
+  • INSERT: auth.uid() = owner_id
+  • UPDATE: auth.uid() = owner_id  
+  • DELETE: auth.uid() = owner_id
+
+SECURITY GUARANTEE:
+  ✓ Server-side enforcement (cannot bypass from client)
+  ✓ Applied at PostgreSQL level before data returns
+  ✓ Works with all Supabase client queries automatically`}
             </pre>
           </div>
         </div>
