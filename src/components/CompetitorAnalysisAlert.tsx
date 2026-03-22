@@ -85,17 +85,18 @@ export const CompetitorAnalysisAlert: React.FC<CompetitorAnalysisProps> = ({
         <Alert className="border-orange-400/60 bg-orange-50 dark:bg-orange-950/30 dark:border-orange-600/40">
           <AlertTriangle className="h-5 w-5 text-orange-600 dark:text-orange-400" />
           <AlertTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-300">
-            High Density Area
+            Category Competition Alert
             <Badge variant="outline" className="border-orange-500 text-orange-700 dark:text-orange-300 text-xs">
-              {competitorsInArea.length} competitor{competitorsInArea.length > 1 ? "s" : ""}
+              {competitorsInArea.length} in "{category}"
             </Badge>
           </AlertTitle>
           <AlertDescription className="text-orange-700 dark:text-orange-400">
             <p className="mb-2">
-              There {competitorsInArea.length === 1 ? "is" : "are"}{" "}
-              <strong>{competitorsInArea.length}</strong> other billboard
+              ⚠️ There {competitorsInArea.length === 1 ? "is" : "are"}{" "}
+              <strong>{competitorsInArea.length}</strong> other{" "}
+              <strong>{category}</strong> category billboard
               {competitorsInArea.length > 1 ? "s" : ""} within a{" "}
-              <strong>{radiusKm} km</strong> radius.
+              <strong>{radiusKm} km</strong> radius. Advertising in a saturated category zone may reduce your campaign's visibility and impact.
             </p>
             <ul className="space-y-1.5">
               {competitorsInArea.slice(0, 3).map((comp) => (
@@ -103,13 +104,13 @@ export const CompetitorAnalysisAlert: React.FC<CompetitorAnalysisProps> = ({
                   <MapPin className="h-3.5 w-3.5 shrink-0" />
                   <span className="font-medium">{comp.title}</span>
                   <span className="text-orange-600/70 dark:text-orange-400/70">
-                    ({comp.distance.toFixed(1)} km away)
+                    — {category} • {comp.distance.toFixed(1)} km away
                   </span>
                 </li>
               ))}
               {competitorsInArea.length > 3 && (
                 <li className="text-sm text-orange-600/80 dark:text-orange-400/80 pl-5">
-                  + {competitorsInArea.length - 3} more in this area
+                  + {competitorsInArea.length - 3} more {category} billboards nearby
                 </li>
               )}
             </ul>
@@ -118,9 +119,9 @@ export const CompetitorAnalysisAlert: React.FC<CompetitorAnalysisProps> = ({
       ) : (
         <Alert className="border-emerald-400/60 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-600/40">
           <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-          <AlertTitle className="text-emerald-800 dark:text-emerald-300">Prime Location</AlertTitle>
+          <AlertTitle className="text-emerald-800 dark:text-emerald-300">Prime Location — No "{category}" Competitors</AlertTitle>
           <AlertDescription className="text-emerald-700 dark:text-emerald-400">
-            No direct competitors within a {radiusKm} km radius. This is a highly uncrowded area for billboard placement.
+            No other <strong>{category}</strong> billboards found within a {radiusKm} km radius. This is an uncrowded zone for your category — ideal for maximum campaign impact.
           </AlertDescription>
         </Alert>
       )}
