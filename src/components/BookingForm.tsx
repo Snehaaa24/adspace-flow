@@ -198,7 +198,12 @@ export function BookingForm({ open, onOpenChange, billboard, onSuccess }: Bookin
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit, (errors) => {
-            console.error('Form validation errors:', errors);
+            console.error('Form validation errors:', JSON.stringify(errors));
+            toast({
+              title: 'Validation Error',
+              description: Object.entries(errors).map(([key, val]) => `${key}: ${(val as any)?.message}`).join(', '),
+              variant: 'destructive',
+            });
             setIsSubmitting(false);
           })} className="space-y-4">
             <FormField
