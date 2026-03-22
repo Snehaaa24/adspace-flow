@@ -95,6 +95,7 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
         title: data.title,
         location: data.location,
         description: data.description,
+        category: data.category,
         width: data.width,
         height: data.height,
         price_per_month: data.price_per_month,

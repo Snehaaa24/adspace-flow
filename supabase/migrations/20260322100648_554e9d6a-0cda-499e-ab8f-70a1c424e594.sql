@@ -1,0 +1,1 @@
+ALTER TABLE public.billboards ADD COLUMN category text DEFAULT 'general';
