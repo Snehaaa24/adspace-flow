@@ -174,7 +174,9 @@ const Analytics = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Analytics</h1>
-          <p className="text-muted-foreground">Track your advertising performance and spending</p>
+          <p className="text-muted-foreground">
+            {isOwner ? 'Track your billboard performance and revenue' : 'Track your advertising performance and spending'}
+          </p>
         </div>
         <div className="flex gap-3">
           <Select value={dateRange} onValueChange={setDateRange}>
