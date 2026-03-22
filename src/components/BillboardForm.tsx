@@ -49,6 +49,7 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
       title: '',
       location: '',
       description: '',
+      category: 'General',
       width: 6,
       height: 3,
       price_per_month: 50000,
