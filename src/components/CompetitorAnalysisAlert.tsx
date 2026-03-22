@@ -39,9 +39,10 @@ export const CompetitorAnalysisAlert: React.FC<CompetitorAnalysisProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("billboards")
-        .select("id, title, latitude, longitude, location, price_per_month, traffic_score")
+        .select("id, title, latitude, longitude, location, price_per_month, traffic_score, category")
         .neq("id", currentBillboardId)
-        .eq("is_available", true);
+        .eq("is_available", true)
+        .eq("category", category);
 
       if (error) throw error;
       return data || [];
