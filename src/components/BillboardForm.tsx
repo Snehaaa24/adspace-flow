@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,10 +14,15 @@ import { useAuth } from '@/lib/auth';
 import { LocationPicker } from '@/components/LocationPicker';
 import { Loader2 } from 'lucide-react';
 
+const BILLBOARD_CATEGORIES = [
+  'Digital', 'Static', 'LED', 'Hoarding', 'Transit', 'Street Furniture', 'General'
+] as const;
+
 const billboardSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   location: z.string().min(1, 'Location is required'),
   description: z.string().optional(),
+  category: z.string().min(1, 'Category is required'),
   width: z.number().min(1, 'Width must be at least 1 meter'),
   height: z.number().min(1, 'Height must be at least 1 meter'),
   price_per_month: z.number().min(1, 'Price must be at least ₹1'),
@@ -43,6 +49,7 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
       title: '',
       location: '',
       description: '',
+      category: 'General',
       width: 6,
       height: 3,
       price_per_month: 50000,
@@ -88,6 +95,7 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
         title: data.title,
         location: data.location,
         description: data.description,
+        category: data.category,
         width: data.width,
         height: data.height,
         price_per_month: data.price_per_month,
@@ -183,6 +191,29 @@ export function BillboardForm({ open, onOpenChange, onSuccess }: BillboardFormPr
                   <FormControl>
                     <Textarea placeholder="Description (optional)" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {BILLBOARD_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

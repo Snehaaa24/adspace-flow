@@ -4,10 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, MapPin, Eye, DollarSign, Calendar } from "lucide-react";
+import { Search, Filter, MapPin, Eye, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { BookingForm } from "@/components/BookingForm";
+import { CompetitorAnalysisAlert } from "@/components/CompetitorAnalysisAlert";
 
 interface Billboard {
   id: string;
@@ -20,6 +21,9 @@ interface Billboard {
   is_available: boolean;
   image_url?: string;
   traffic_score: 'low' | 'medium' | 'high';
+  latitude?: number;
+  longitude?: number;
+  category?: string;
 }
 
 const Listings = () => {
@@ -188,8 +192,7 @@ const Listings = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <DollarSign className="h-5 w-5 text-primary" />
-                    <span className="text-xl font-bold text-primary">${billboard.price_per_month}</span>
+                    <span className="text-xl font-bold text-primary">₹{billboard.price_per_month.toLocaleString()}</span>
                     <span className="text-muted-foreground">/month</span>
                   </div>
                   <Button 
@@ -207,6 +210,16 @@ const Listings = () => {
           </Card>
         ))}
       </div>
+
+      {/* Competitor Analysis for selected billboard */}
+      {selectedBillboard && selectedBillboard.latitude && selectedBillboard.longitude && (
+        <CompetitorAnalysisAlert
+          currentBillboardId={selectedBillboard.id}
+          category={selectedBillboard.category || 'General'}
+          latitude={selectedBillboard.latitude}
+          longitude={selectedBillboard.longitude}
+        />
+      )}
 
       {filteredBillboards.length === 0 && (
         <Card>

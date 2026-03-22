@@ -51,36 +51,40 @@ const Analytics = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState("30d");
+  const isOwner = profile?.role === 'owner';
 
   useEffect(() => {
     const loadData = async () => {
       if (!profile) return;
 
-      // Load bookings with billboard data
-      const { data: bookingsData } = await supabase
+      let bookingsQuery = supabase
         .from("bookings")
-        .select(
-          `
-          *,
-          billboard:billboards(title, location, daily_impressions)
-        `
-        )
-        .eq("customer_id", profile.user_id)
+        .select(`*, billboard:billboards(title, location, daily_impressions)`)
         .order("created_at", { ascending: false });
 
-      // Load campaigns
-      const { data: campaignsData } = await supabase
-        .from("campaigns")
-        .select("*")
-        .eq("customer_id", profile.user_id);
+      if (!isOwner) {
+        bookingsQuery = bookingsQuery.eq("customer_id", profile.user_id);
+      }
+
+      const { data: bookingsData } = await bookingsQuery;
+
+      // Load campaigns (only for customers)
+      let campaignsData: Campaign[] = [];
+      if (!isOwner) {
+        const { data } = await supabase
+          .from("campaigns")
+          .select("*")
+          .eq("customer_id", profile.user_id);
+        campaignsData = data || [];
+      }
 
       setBookings(bookingsData || []);
-      setCampaigns(campaignsData || []);
+      setCampaigns(campaignsData);
       setLoading(false);
     };
 
     loadData();
-  }, [profile]);
+  }, [profile, isOwner]);
 
   // Calculate metrics
   const totalSpend = bookings
@@ -170,7 +174,9 @@ const Analytics = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Analytics</h1>
-          <p className="text-muted-foreground">Track your advertising performance and spending</p>
+          <p className="text-muted-foreground">
+            {isOwner ? 'Track your billboard performance and revenue' : 'Track your advertising performance and spending'}
+          </p>
         </div>
         <div className="flex gap-3">
           <Select value={dateRange} onValueChange={setDateRange}>
@@ -190,7 +196,7 @@ const Analytics = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Spend</CardTitle>
+            <CardTitle className="text-sm font-medium">{isOwner ? 'Total Revenue' : 'Total Spend'}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
