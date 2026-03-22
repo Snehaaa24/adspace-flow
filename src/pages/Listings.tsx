@@ -192,8 +192,7 @@ const Listings = () => {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                    <DollarSign className="h-5 w-5 text-primary" />
-                    <span className="text-xl font-bold text-primary">${billboard.price_per_month}</span>
+                    <span className="text-xl font-bold text-primary">₹{billboard.price_per_month.toLocaleString()}</span>
                     <span className="text-muted-foreground">/month</span>
                   </div>
                   <Button 
