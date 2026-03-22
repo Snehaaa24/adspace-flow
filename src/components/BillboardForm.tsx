@@ -13,10 +13,15 @@ import { useAuth } from '@/lib/auth';
 import { LocationPicker } from '@/components/LocationPicker';
 import { Loader2 } from 'lucide-react';
 
+const BILLBOARD_CATEGORIES = [
+  'Digital', 'Static', 'LED', 'Hoarding', 'Transit', 'Street Furniture', 'General'
+] as const;
+
 const billboardSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   location: z.string().min(1, 'Location is required'),
   description: z.string().optional(),
+  category: z.string().min(1, 'Category is required'),
   width: z.number().min(1, 'Width must be at least 1 meter'),
   height: z.number().min(1, 'Height must be at least 1 meter'),
   price_per_month: z.number().min(1, 'Price must be at least ₹1'),
