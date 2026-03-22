@@ -15,7 +15,7 @@ import { LocationPicker } from '@/components/LocationPicker';
 import { Loader2 } from 'lucide-react';
 
 const BILLBOARD_CATEGORIES = [
-  'Digital', 'Static', 'LED', 'Hoarding', 'Transit', 'Street Furniture', 'General'
+  'F&B', 'Tech', 'Travel', 'Education', 'Finance'
 ] as const;
 
 const billboardSchema = z.object({
