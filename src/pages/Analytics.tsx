@@ -51,36 +51,40 @@ const Analytics = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState("30d");
+  const isOwner = profile?.role === 'owner';
 
   useEffect(() => {
     const loadData = async () => {
       if (!profile) return;
 
-      // Load bookings with billboard data
-      const { data: bookingsData } = await supabase
+      let bookingsQuery = supabase
         .from("bookings")
-        .select(
-          `
-          *,
-          billboard:billboards(title, location, daily_impressions)
-        `
-        )
-        .eq("customer_id", profile.user_id)
+        .select(`*, billboard:billboards(title, location, daily_impressions)`)
         .order("created_at", { ascending: false });
 
-      // Load campaigns
-      const { data: campaignsData } = await supabase
-        .from("campaigns")
-        .select("*")
-        .eq("customer_id", profile.user_id);
+      if (!isOwner) {
+        bookingsQuery = bookingsQuery.eq("customer_id", profile.user_id);
+      }
+
+      const { data: bookingsData } = await bookingsQuery;
+
+      // Load campaigns (only for customers)
+      let campaignsData: Campaign[] = [];
+      if (!isOwner) {
+        const { data } = await supabase
+          .from("campaigns")
+          .select("*")
+          .eq("customer_id", profile.user_id);
+        campaignsData = data || [];
+      }
 
       setBookings(bookingsData || []);
-      setCampaigns(campaignsData || []);
+      setCampaigns(campaignsData);
       setLoading(false);
     };
 
     loadData();
-  }, [profile]);
+  }, [profile, isOwner]);
 
   // Calculate metrics
   const totalSpend = bookings
