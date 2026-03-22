@@ -21,6 +21,9 @@ interface Billboard {
   is_available: boolean;
   image_url?: string;
   traffic_score: 'low' | 'medium' | 'high';
+  latitude?: number;
+  longitude?: number;
+  category?: string;
 }
 
 const Listings = () => {
