@@ -211,6 +211,16 @@ const Listings = () => {
         ))}
       </div>
 
+      {/* Competitor Analysis for selected billboard */}
+      {selectedBillboard && selectedBillboard.latitude && selectedBillboard.longitude && (
+        <CompetitorAnalysisAlert
+          currentBillboardId={selectedBillboard.id}
+          category={selectedBillboard.category || 'General'}
+          latitude={selectedBillboard.latitude}
+          longitude={selectedBillboard.longitude}
+        />
+      )}
+
       {filteredBillboards.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-8">
