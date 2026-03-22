@@ -4,10 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, MapPin, Eye, DollarSign, Calendar } from "lucide-react";
+import { Search, Filter, MapPin, Eye, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { BookingForm } from "@/components/BookingForm";
+import { CompetitorAnalysisAlert } from "@/components/CompetitorAnalysisAlert";
 
 interface Billboard {
   id: string;
